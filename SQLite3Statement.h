@@ -1,6 +1,6 @@
 //
 // SQLite3Statement.h
-// Core SQLite3 Framework
+// CoreSQLite3 Framework
 //
 // Created by Mirek Rusin on 07/02/2011.
 // Copyright 2011 Inteliv Ltd. All rights reserved.

@@ -1,10 +1,10 @@
-/*
- *  SQLite3ConnectionPool.c
- *
- *  Created by Mirek Rusin on 07/02/2011.
- *  Copyright 2011 Inteliv Ltd. All rights reserved.
- *
- */
+//
+// SQLite3ConnectionPool.c
+// CoreSQLite3 Framework
+//
+// Created by Mirek Rusin on 07/02/2011.
+// Copyright 2011 Inteliv Ltd. All rights reserved.
+//
 
 #import "SQLite3ConnectionPool.h"
 

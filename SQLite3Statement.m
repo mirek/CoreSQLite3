@@ -1,10 +1,10 @@
-/*
- *  SQLite3Statement.c
- *
- *  Created by Mirek Rusin on 07/02/2011.
- *  Copyright 2011 Inteliv Ltd. All rights reserved.
- *
- */
+//
+// SQLite3Statement.c
+// CoreSQLite3 Framework
+//
+// Created by Mirek Rusin on 07/02/2011.
+// Copyright 2011 Inteliv Ltd. All rights reserved.
+//
 
 #import "SQLite3Statement.h"
 
@@ -32,6 +32,7 @@ inline int SQLite3StatementStep(SQLite3StatementRef statement) {
 
 inline void SQLite3StatementExecute(SQLite3StatementRef statement) {
   for (; sqlite3_step(statement->stmt) == SQLITE_ROW; ) {}
+  sqlite3_finalize(statement->stmt);
 }
 
 inline void SQLite3Execute(SQLite3ConnectionRef connection, CFStringRef sql) {
@@ -69,16 +70,21 @@ inline NSInteger SQLite3StatementGetColumnIndexWithName(SQLite3StatementRef stat
 
 #pragma Binding
 
+inline int SQLite3StatementBindData(SQLite3StatementRef statement, NSInteger index, CFDataRef data) {
+  return sqlite3_bind_blob(statement->stmt, index, CFDataGetBytePtr(data), CFDataGetLength(data), NULL);
+}
+
+inline int SQLite3StatementBindDouble(SQLite3StatementRef statement, NSInteger index, double_t value) {
+  return sqlite3_bind_double(statement->stmt, index, value);
+}
+
+
 inline int SQLite3StatementBindInt32(SQLite3StatementRef statement, NSInteger index, int32_t value) {
   return sqlite3_bind_int(statement->stmt, index, value);
 }
 
 inline int SQLite3StatementBindInt64(SQLite3StatementRef statement, NSInteger index, int64_t value) {
   return sqlite3_bind_int64(statement->stmt, index, value);
-}
-
-inline int SQLite3StatementBindDouble(SQLite3StatementRef statement, NSInteger index, double_t value) {
-  return sqlite3_bind_double(statement->stmt, index, value);
 }
 
 inline int SQLite3StatementBindNULL(SQLite3StatementRef statement, NSInteger index) {
@@ -88,10 +94,6 @@ inline int SQLite3StatementBindNULL(SQLite3StatementRef statement, NSInteger ind
 inline int SQLite3StatementBindString(SQLite3StatementRef statement, NSInteger index, CFStringRef value) {
   const char *valueCString = [(NSString *)value UTF8String];
   return sqlite3_bind_text(statement->stmt, index, valueCString, -1, NULL);
-}
-
-inline int SQLite3StatementBindData(SQLite3StatementRef statement, NSInteger index, CFDataRef data) {
-  return sqlite3_bind_blob(statement->stmt, index, CFDataGetBytePtr(data), CFDataGetLength(data), NULL);
 }
 
 // Extra stuff
@@ -137,7 +139,7 @@ inline CGImageRef SQLite3StatementCreateImageWithColumn(SQLite3StatementRef stat
   if (data) {
     CGImageSourceRef source = CGImageSourceCreateWithData(data, NULL);
     image = CGImageSourceCreateImageAtIndex(source, 0, NULL);
-    // TODO: release source?
+    CFRelease(source);
     CFRelease(data);
   }
   return image;
