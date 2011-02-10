@@ -86,10 +86,10 @@ Schema migration pattern has been included as an extra functionality built on to
 
 Pattern of schema migrations is similar to Ruby on Rails one.
 
-  /migrations/20100209-111000-init.sql
-  /migrations/20100209-111000.undo.sql (optional)
-  /migrations/20100209-111000-create-users.sql
-  /migrations/20100209-111000.undo.sql (optional)
+    /migrations/20100209-111000-init.sql
+    /migrations/20100209-111000.undo.sql (optional)
+    /migrations/20100209-111000-create-users.sql
+    /migrations/20100209-111000.undo.sql (optional)
 
 ### Working with Images
 
@@ -105,11 +105,11 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `sqlite3_backup_remaining`       | `-`
 | `sqlite3_backup_step`            | `-`
 | `sqlite3_bind_blob`              | `SQLite3StatementBindData`
+| `-`                              | `SQLite3StatementBindImage`
 | `sqlite3_bind_double`            | `SQLite3StatementBindDouble`    
 | `sqlite3_bind_int`               | `SQLite3StatementBindInt32`   
 | `sqlite3_bind_int64`             | `SQLite3StatementBindInt64`  
 | `sqlite3_bind_null`              | `SQLite3StatementBindNULL`       
-| `-`                              | `SQLite3StatementBindImage`
 | `sqlite3_bind_parameter_count`   | `SQLite3StatementBindCount`                                                                            
 | `sqlite3_bind_parameter_index`   | `SQLite3StatementBindIndex`                                                                            
 | `sqlite3_bind_parameter_name`    | `SQLite3StatementBindName`                                                                            
@@ -127,20 +127,23 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `sqlite3_busy_timeout`           | `-`                                                                            
 | `sqlite3_changes`                | `-`                                                                            
 | `sqlite3_clear_bindings`         | `SQLite3StatementClearBindings`                 
-| `sqlite3_close`                  | `-`                                                                            
+| `sqlite3_close`                  | `SQLite3ConnectionClose`                                                                            
 | `sqlite3_collation_needed`       | `-`                                                                            
 | `sqlite3_collation_needed16`     | `-`                                                                            
-| `sqlite3_column_blob`            | `SQLite3StatementGetData`
-| `sqlite3_column_bytes`           | `-`
+| `sqlite3_column_blob`            | `-`
+| `sqlite3_column_bytes`           | `SQLite3StatementGetData`
 | `sqlite3_column_bytes16`         | `-`                                                                           
 | `sqlite3_column_count`           | `SQLite3StatementGetColumnCount`                                                                            
 | `sqlite3_column_database_name`   | `-`                                                                            
 | `sqlite3_column_database_name16` | `-`                                                                            
 | `sqlite3_column_decltype`        | `-`                                                                            
 | `sqlite3_column_decltype16`      | `-`                                                                            
-| `sqlite3_column_double`          | `-`                                                                            
-| `sqlite3_column_int`             | `-`                                                                            
-| `sqlite3_column_int64`           | `-`                                                                            
+| `sqlite3_column_double`          | `SQLite3StatementGetDoubleWithColumn`
+| `-`                              | `SQLite3StatementGetDoubleWithColumnName`
+| `sqlite3_column_int`             | `SQLite3StatementGetInt32WithColumn`                                                                            
+| `-`                              | `SQLite3StatementGetInt32WithColumnName`
+| `sqlite3_column_int64`           | `SQLite3StatementGetInt64WithColumn`                                                                            
+| `-`                              | `SQLite3StatementGetInt64WithColumnName`
 | `sqlite3_column_name`            | `SQLite3StatementColumnNameCreateString`
 | `-`                              | `SQLite3StatementGetColumnIndexWithName`
 | `sqlite3_column_name16`          | `-`                                                                            
@@ -148,9 +151,10 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `sqlite3_column_origin_name16`   | `-`                                                                            
 | `sqlite3_column_table_name`      | `-`                                                                            
 | `sqlite3_column_table_name16`    | `-`                                                                            
-| `sqlite3_column_text`            | `-`                                                                            
+| `sqlite3_column_text`            | `SQLite3StatementCreateStringWithColumn`                                                                            
+| `-`                              | `SQLite3StatementCreateStringWithColumnName`                                                                            
 | `sqlite3_column_text16`          | `-`                                                                            
-| `sqlite3_column_type`            | `-`                                                                            
+| `sqlite3_column_type`            | `SQLite3StatementGetColumnType`                                                                            
 | `sqlite3_column_value`           | `-`                                                                            
 | `sqlite3_commit_hook`            | `-`                                                                            
 | `sqlite3_compileoption_get`      | `-`                                                                            
@@ -175,20 +179,21 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `sqlite3_declare_vtab`           | `-`                                                                            
 | `sqlite3_enable_load_extension`  | `-`                                                                            
 | `sqlite3_enable_shared_cache`    | `-`                                                                            
-| `sqlite3_errcode`                | `-`                                                                            
-| `sqlite3_errmsg`                 | `-`                                                                            
+| `sqlite3_errcode`                | `SQLite3ConnectionErrorCode`                                                                            
+| `-`                              | `SQLite3ConnectionHasError`                                                                            
+| `sqlite3_errmsg`                 | `SQLite3ConnectionCreateError`                                                                            
 | `sqlite3_errmsg16`               | `-`                                                                            
 | `sqlite3_exec`                   | `-`                                                                            
 | `sqlite3_extended_errcode`       | `-`                                                                            
 | `sqlite3_extended_result_codes`  | `-`                                                                            
 | `sqlite3_file_control`           | `-`                                                                            
-| `sqlite3_finalize`               | `-`                                                                            
+| `sqlite3_finalize`               | `SQLite3ConnectionFinalize`                                                                            
 | `sqlite3_free`                   | `-`                                                                            
 | `sqlite3_free_table`             | `-`                                                                            
 | `sqlite3_get_autocommit`         | `-`                                                                            
 | `sqlite3_get_auxdata`            | `-`                                                                            
 | `sqlite3_get_table`              | `-`                                                                            
-| `sqlite3_initialize`             | `-`                                                                            
+| `sqlite3_initialize`             | `SQLite3ConnectionCreate`                                                                            
 | `sqlite3_interrupt`              | `-`                                                                            
 | `sqlite3_last_insert_rowid`      | `-`                                                                            
 | `sqlite3_libversion`             | `-`                                                                            
@@ -210,14 +215,14 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `sqlite3_next_stmt`              | `-`                                                                            
 | `sqlite3_open`                   | `-`                                                                            
 | `sqlite3_open16`                 | `-`                                                                            
-| `sqlite3_open_v2`                | `-`                                                                            
+| `sqlite3_open_v2`                | `SQLite3ConnectionCreate`                                                                            
 | `sqlite3_os_end`                 | `-`                                                                            
 | `sqlite3_os_init`                | `-`                                                                            
 | `sqlite3_overload_function`      | `-`                                                                            
 | `sqlite3_prepare`                | `-`                                                                            
 | `sqlite3_prepare16`              | `-`                                                                            
 | `sqlite3_prepare16_v2`           | `-`                                                                            
-| `sqlite3_prepare_v2`             | `-`                                                                            
+| `sqlite3_prepare_v2`             | `SQLite3StatementCreate`                                                                            
 | `sqlite3_profile`                | `-`                                                                            
 | `sqlite3_progress_handler`       | `-`                                                                            
 | `sqlite3_randomness`             | `-`                                                                            
