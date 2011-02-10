@@ -8,9 +8,6 @@
 
 #import "CoreSQLite3.h"
 
-
-//CFStringRef SQLite3ErrorDomain = CFSTR("com.github.mirek.sqlite3");
-
 SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, int flags, const char *zVfs);
 SQLite3ConnectionRef SQLite3ConnectionCreate(CFStringRef path, int flags, const char *zVfs);
 void SQLite3OpenResource(CFBundleRef bundle, CFStringRef resourceName, CFStringRef resourceType, CFStringRef subDirName, sqlite3 **db);
@@ -23,4 +20,11 @@ int SQLite3ConnectionClose(SQLite3ConnectionRef connection);
 BOOL SQLite3ConnectionHasError(SQLite3ConnectionRef connection);
 CFErrorRef SQLite3ConnectionCreateError(SQLite3ConnectionRef connection);
 
-//#endif
+#pragma Resultset utility functions
+
+int32_t     SQLite3ConnectionGetInt32WithQuery     (SQLite3ConnectionRef connection, CFStringRef sql);
+int64_t     SQLite3ConnectionGetInt64WithQuery     (SQLite3ConnectionRef connection, CFStringRef sql);
+BOOL        SQLite3ConnectionGetBOOLWithQuery      (SQLite3ConnectionRef connection, CFStringRef sql);
+CFStringRef SQLite3ConnectionCreateStringWithQuery (SQLite3ConnectionRef connection, CFStringRef sql);
+CFDataRef   SQLite3ConnectionCreateDataWithQuery   (SQLite3ConnectionRef connection, CFStringRef sql);
+CGImageRef  SQLite3ConnectionCreateImageWithQuery  (SQLite3ConnectionRef connection, CFStringRef sql);

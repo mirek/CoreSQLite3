@@ -9,9 +9,23 @@
 #import "CoreSQLite3.h"
 
 typedef struct {
+  CFTypeRef isa;
+  CFAllocatorRef allocator;
+  NSInteger retainCount;
+  sqlite3 *db;
+} SQLite3Connection;
+
+typedef SQLite3Connection* SQLite3ConnectionRef;
+
+typedef struct {
+  CFTypeRef isa;
+  CFAllocatorRef allocator;
   NSInteger retainCount;
   sqlite3_stmt *stmt;
+  SQLite3ConnectionRef connection;
 } SQLite3Statement;
+
+typedef SQLite3Statement *SQLite3StatementRef;
 
 typedef enum {
   kSQLite3TypeInteger = SQLITE_INTEGER,
@@ -20,17 +34,6 @@ typedef enum {
   kSQLite3TypeNULL    = SQLITE_NULL,
   kSQLite3TypeString  = SQLITE_TEXT,
 } SQLite3Type;
-
-typedef SQLite3Statement *SQLite3StatementRef;
-
-typedef struct {
-  CFTypeRef isa;
-  CFAllocatorRef allocator;
-  sqlite3 *db;
-  NSInteger retainCount;
-} SQLite3Connection;
-
-typedef SQLite3Connection* SQLite3ConnectionRef;
 
 //typedef enum {
 //  kSQLite3OpenOptionReadOnly  = SQLITE_OPEN_READONLY,

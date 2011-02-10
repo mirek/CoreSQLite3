@@ -22,8 +22,12 @@
   STAssertTrue(NULL == SQLite3ConnectionRelease(connection), @"Connection should be released");
 }
 
-- (void) testExample {
-  //STFail(@"Unit tests are not implemented yet in Tests");
+- (void) testCreateUsersTable {
+  NSError *error = nil;
+  SQLite3ConnectionExecute(connection, (CFStringRef)@"create table users(id int primary key, username varchar, name varchar, surname varchar)");
+  STAssertNil(error = (NSError *)SQLite3ConnectionCreateError(connection), @"Connection should't have error %@", error);
+  //STAssertTrue(SQLite3, <#description#>, <#...#>)
+  [error release];
 }
 
 @end
