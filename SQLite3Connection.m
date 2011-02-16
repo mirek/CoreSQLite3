@@ -98,9 +98,46 @@ inline sqlite3 *SQLite3ConnectionGetConnection(SQLite3ConnectionRef connection) 
 
 #pragma Resultset utility functions
 
+inline int SQLite3ConnectionExecutev(SQLite3ConnectionRef connection, CFStringRef sql, ...) {
+  va_list arguments;
+  va_start(arguments, sql);
+  CFStringRef sqlv = CFStringCreateWithFormatAndArguments(connection->allocator, NULL, sql, arguments);
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sqlv);
+  CFRelease(sqlv);
+  va_end(arguments);
+  int code = SQLite3StatementExecute(statement);
+  SQLite3StatementRelease(statement);
+  return code;
+}
+
+inline int SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef sql) {
+//  va_list arguments;
+//  va_start(arguments, sql);
+  int code = SQLITE_ERROR;
+  if (sql) {
+    SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+  //  va_end(arguments);
+    int code = SQLite3StatementExecute(statement);
+    SQLite3StatementRelease(statement);
+  }
+  return code;
+}
+
+// Executes UTF-8 sql file.
+inline int SQLite3ConnectionExecuteWithContentsOfFileAtPath(SQLite3ConnectionRef connection, CFStringRef path) {
+  // TODO: Remove Objective-C
+  CFStringRef sql = (CFStringRef)[[NSString alloc] initWithContentsOfFile: (NSString *)path encoding: NSUTF8StringEncoding error: nil];
+  int result = SQLite3ConnectionExecute(connection, sql);
+  CFRelease(sql);
+  return result;
+}
+
 inline int32_t SQLite3ConnectionGetInt32WithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
   int32_t value = 0;
+//  va_list arguments;
+//  va_start(arguments, sql);
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+//  va_end(arguments);
   for (; SQLite3StatementStep(statement) == SQLITE_ROW; ) {
     value = SQLite3StatementGetInt32WithColumn(statement, 0);
     break;
@@ -162,4 +199,19 @@ inline CGImageRef SQLite3ConnectionCreateImageWithQuery(SQLite3ConnectionRef con
   }
   SQLite3StatementRelease(statement);
   return value;
+}
+
+BOOL SQLite3ConnectionDoesTableExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
+//  CFStringRef sql = CFStringCreateWithFormat(connection->allocator, CFSTR(""), )
+//  BOOL value = SQLite3ConnectionGetBOOLWithQuery(connection, );
+//  return value;
+  return NO;
+}
+
+BOOL SQLite3ConnectionDoesViewExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
+  return NO;
+}
+
+BOOL SQLite3ConnectionDoesTableOrViewExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
+  return NO;
 }

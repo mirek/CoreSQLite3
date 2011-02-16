@@ -10,7 +10,8 @@
 #define __CORE_SQLITE3__ 1
 
 #import <CoreFoundation/CoreFoundation.h>
-#import <sqlite3.h>
+#import "sqlite3.h"
+#import "dirent.h"
 
 #ifdef __cplusplus
 extern "C" {

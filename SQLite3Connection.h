@@ -22,9 +22,17 @@ CFErrorRef SQLite3ConnectionCreateError(SQLite3ConnectionRef connection);
 
 #pragma Resultset utility functions
 
+int         SQLite3ConnectionExecute                         (SQLite3ConnectionRef connection, CFStringRef sql);
+int         SQLite3ConnectionExecutev                        (SQLite3ConnectionRef connection, CFStringRef sql, ...) CF_FORMAT_FUNCTION(2, 3);
+int         SQLite3ConnectionExecuteWithContentsOfFileAtPath (SQLite3ConnectionRef connection, CFStringRef path);
+
 int32_t     SQLite3ConnectionGetInt32WithQuery     (SQLite3ConnectionRef connection, CFStringRef sql);
 int64_t     SQLite3ConnectionGetInt64WithQuery     (SQLite3ConnectionRef connection, CFStringRef sql);
 BOOL        SQLite3ConnectionGetBOOLWithQuery      (SQLite3ConnectionRef connection, CFStringRef sql);
 CFStringRef SQLite3ConnectionCreateStringWithQuery (SQLite3ConnectionRef connection, CFStringRef sql);
 CFDataRef   SQLite3ConnectionCreateDataWithQuery   (SQLite3ConnectionRef connection, CFStringRef sql);
 CGImageRef  SQLite3ConnectionCreateImageWithQuery  (SQLite3ConnectionRef connection, CFStringRef sql);
+
+BOOL SQLite3ConnectionDoesTableExistWithName       (SQLite3ConnectionRef connection, CFStringRef name);
+BOOL SQLite3ConnectionDoesViewExistWithName        (SQLite3ConnectionRef connection, CFStringRef name);
+BOOL SQLite3ConnectionDoesTableOrViewExistWithName (SQLite3ConnectionRef connection, CFStringRef name);

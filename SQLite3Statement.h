@@ -25,7 +25,6 @@ SQLite3ConnectionRef SQLite3StatementGetConnection(SQLite3StatementRef statement
 
 int SQLite3StatementStep     (SQLite3StatementRef  statement);
 int SQLite3StatementExecute  (SQLite3StatementRef  statement);
-int SQLite3ConnectionExecute (SQLite3ConnectionRef connection, CFStringRef sql);
 
 CFStringRef SQLite3CreateColumnNameStringWithIndex (SQLite3StatementRef statement, NSInteger   index);
 NSUInteger  SQLite3GetColumnIndexWithName          (SQLite3StatementRef statement, CFStringRef name);

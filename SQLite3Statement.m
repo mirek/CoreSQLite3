@@ -18,12 +18,27 @@ inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQL
     statement->allocator = allocator ? CFRetain(allocator) : NULL;
     statement->retainCount = 1;
     sqlite3_prepare(connection->db, [(NSString *)sql UTF8String], -1, &statement->stmt, NULL);
+//    va_list arguments;
+//    va_start(arguments, sql);
+//    CFTypeRef argument = NULL;
+//    NSInteger i = 0;
+//    while ((argument = va_arg(arguments, CFTypeRef))) {
+//      NSLog(@"will bind i = %ld, %p %p", i, (void *)argument, (void *)sql);
+//      CFShow(sql);
+//      CFShow(argument);
+//      //SQLite3StatementBindCFType(statement, i++, argument);
+//    }
+//    va_end(arguments);
   }
   return statement;
 }
 
 inline SQLite3StatementRef SQLite3StatementCreate(SQLite3ConnectionRef connection, CFStringRef sql) {
-  return _SQLite3StatementCreate(NULL, connection, sql);
+//	va_list arguments;
+//	va_start(arguments, sql);
+  SQLite3StatementRef value = _SQLite3StatementCreate(NULL, connection, sql);
+//	va_end(arguments);
+  return value;
 }
 
 inline SQLite3StatementRef SQLite3StatementRetain(SQLite3StatementRef statement) {
@@ -65,13 +80,6 @@ inline int SQLite3StatementExecute(SQLite3StatementRef statement) {
   for (; sqlite3_step(statement->stmt) == SQLITE_ROW; ) {}
   sqlite3_finalize(statement->stmt);
   return SQLITE_OK; // TODO: change this one
-}
-
-inline int SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef sql) {
-  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
-  int code = SQLite3StatementExecute(statement);
-  SQLite3StatementRelease(statement);
-  return code;
 }
 
 // Column name by index
@@ -136,6 +144,43 @@ inline int SQLite3StatementBindCFType(SQLite3StatementRef statement, NSInteger i
   CFTypeID valueTypeID = CFGetTypeID(value);
   if (CFStringGetTypeID() == valueTypeID)
     result = SQLite3StatementBindString(statement, index, (CFStringRef)value);
+  else if (CFDataGetTypeID() == valueTypeID)
+    result = SQLite3StatementBindData(statement, index, (CFDataRef)value);
+//  else if (CGImageGetTypeID() == valueTypeID)
+//    result = SQLite3StatementBindImage(statement, index, (CGImageRef)value);
+  else if (CFNumberGetTypeID() == valueTypeID)
+    switch (CFNumberGetType(value)) {
+      case kCFNumberSInt8Type:
+      case kCFNumberSInt16Type:
+      case kCFNumberSInt32Type:
+      case kCFNumberSInt64Type:
+      case kCFNumberCharType:
+      case kCFNumberShortType:
+      case kCFNumberIntType:
+      case kCFNumberLongType:
+      case kCFNumberLongLongType:
+      case kCFNumberCFIndexType:
+      case kCFNumberNSIntegerType:
+      {
+        int64_t value_ = 0;
+        CFNumberGetValue(value, kCFNumberSInt64Type, (void *)&value_);
+        SQLite3StatementBindInt64(statement, index, value_);
+        break;
+      } 
+      case kCFNumberFloat32Type:
+      case kCFNumberFloat64Type:
+      case kCFNumberFloatType:
+      case kCFNumberDoubleType:
+      case kCFNumberCGFloatType: // == kCFNumberMaxType
+      {
+        double_t value_ = 0.0;
+        CFNumberGetValue(value, kCFNumberDoubleType, (void *)&value_);
+        SQLite3StatementBindDouble(statement, index, value_);
+        break;
+      }
+    }
+  else
+    result = SQLITE_ERROR;
   return result;
 }
 
