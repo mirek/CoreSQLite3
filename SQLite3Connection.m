@@ -13,14 +13,21 @@
 
 inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, int flags, const char *zVfs) {
   SQLite3ConnectionRef connection = CFAllocatorAllocate(allocator, sizeof(SQLite3ConnectionRef), 0);
-  connection->allocator = allocator ? CFRetain(allocator) : NULL;
-  connection->retainCount = 1;
-  int sqlite3_open_v2_result = sqlite3_open_v2([(NSString *)path UTF8String], &connection->db, flags, zVfs);
-  if (sqlite3_open_v2_result == SQLITE_OK) {
-    // OK
-  } else {
-    if (!connection->db) // If the sqlite3 connection has not been allocated, we deallocate connection and return NULL
-      SQLite3ConnectionRelease(connection);
+  if (connection) {
+    connection->allocator = allocator ? CFRetain(allocator) : NULL;
+    connection->retainCount = 1;
+    
+    // Default date formatter
+    connection->defaultDateFormatter = CFDateFormatterCreate(NULL, NULL, kCFDateFormatterNoStyle, kCFDateFormatterNoStyle);
+    CFDateFormatterSetFormat(connection->defaultDateFormatter, CFSTR("yyyy-MM-dd HH:mm:ss"));
+    
+    int sqlite3_open_v2_result = sqlite3_open_v2([(NSString *)path UTF8String], &connection->db, flags, zVfs);
+    if (sqlite3_open_v2_result == SQLITE_OK) {
+      // OK
+    } else {
+      if (!connection->db) // If the sqlite3 connection has not been allocated, we deallocate connection and return NULL
+        SQLite3ConnectionRelease(connection);
+    }
   }
   return connection;
 }
@@ -50,10 +57,19 @@ inline int SQLite3ConnectionClose(SQLite3ConnectionRef connection) {
 
 inline SQLite3ConnectionRef SQLite3ConnectionRelease(SQLite3ConnectionRef connection) {
   if (--connection->retainCount <= 0) {
+    
+    // Fist, let's close connection
     SQLite3ConnectionClose(connection);
+    
+    // Release date formatter created on init
+    CFRelease(connection->defaultDateFormatter);
+    
+    // Deallocate connection stuct
     CFAllocatorRef allocator = connection->allocator;
     CFAllocatorDeallocate(allocator, connection);
     connection = NULL;
+    
+    // Release allocator if has been set
     if (allocator)
       CFRelease(allocator);
   }
@@ -111,14 +127,12 @@ inline int SQLite3ConnectionExecutev(SQLite3ConnectionRef connection, CFStringRe
 }
 
 inline int SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef sql) {
-//  va_list arguments;
-//  va_start(arguments, sql);
   int code = SQLITE_ERROR;
   if (sql) {
-    SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
-  //  va_end(arguments);
-    int code = SQLite3StatementExecute(statement);
-    SQLite3StatementRelease(statement);
+    code = sqlite3_exec(connection->db, [(NSString *)sql UTF8String], NULL, NULL, NULL);
+//    SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+//    code = SQLite3StatementExecute(statement);
+//    SQLite3StatementRelease(statement);
   }
   return code;
 }
@@ -190,11 +204,33 @@ inline CFDataRef SQLite3ConnectionCreateDataWithQuery(SQLite3ConnectionRef conne
   return value;
 }
 
-inline CGImageRef SQLite3ConnectionCreateImageWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
-  CGImageRef value = NULL;
+//inline CGImageRef SQLite3ConnectionCreateImageWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
+//  CGImageRef value = NULL;
+//  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+//  for (; SQLite3StatementStep(statement) == SQLITE_ROW; ) {
+//    value = SQLite3StatementCreateImageWithColumn(statement, 0);
+//    break;
+//  }
+//  SQLite3StatementRelease(statement);
+//  return value;
+//}
+
+inline CFDateRef SQLite3ConnectionCreateDateWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
+  CFDateRef value = NULL;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
   for (; SQLite3StatementStep(statement) == SQLITE_ROW; ) {
-    value = SQLite3StatementCreateImageWithColumn(statement, 0);
+    value = SQLite3StatementCreateDateWithColumn(statement, 0);
+    break;
+  }
+  SQLite3StatementRelease(statement);
+  return value;
+}
+
+inline CFDictionaryRef SQLite3ConnectionCreateDictionaryForAllColumnsWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
+  CFDictionaryRef value = NULL;
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+  for (; SQLite3StatementStep(statement) == SQLITE_ROW; ) {
+    value = SQLite3StatementCreateDictionaryWithAllColumns(statement);
     break;
   }
   SQLite3StatementRelease(statement);

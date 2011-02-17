@@ -19,6 +19,7 @@ SQLite3StatementRef  SQLite3StatementCreate        (SQLite3ConnectionRef connect
 SQLite3StatementRef  SQLite3StatementRetain        (SQLite3StatementRef  statement);
 SQLite3StatementRef  SQLite3StatementRelease       (SQLite3StatementRef  statement);
 int                  SQLite3StatementFinalize      (SQLite3StatementRef  statement);
+int                  SQLite3StatementReset         (SQLite3StatementRef  statement);
 int                  SQLite3StatementClearBindings (SQLite3StatementRef  statement);
 
 SQLite3ConnectionRef SQLite3StatementGetConnection(SQLite3StatementRef statement);
@@ -32,30 +33,38 @@ NSInteger   SQLite3StatementGetColumnIndexWithName (SQLite3StatementRef statemen
 
 #pragma Binding
 
-int SQLite3StatementBindInt32  (SQLite3StatementRef statement, NSInteger index, int32_t     value);
-int SQLite3StatementBindInt64  (SQLite3StatementRef statement, NSInteger index, int64_t     value);
-int SQLite3StatementBindDouble (SQLite3StatementRef statement, NSInteger index, double_t    value);
-int SQLite3StatementBindNULL   (SQLite3StatementRef statement, NSInteger index);
-int SQLite3StatementBindString (SQLite3StatementRef statement, NSInteger index, CFStringRef value);
-int SQLite3StatementBindData   (SQLite3StatementRef statement, NSInteger index, CFDataRef   value);
+int SQLite3StatementBindInt32       (SQLite3StatementRef statement, NSInteger index, int32_t     value);
+int SQLite3StatementBindInt64       (SQLite3StatementRef statement, NSInteger index, int64_t     value);
+int SQLite3StatementBindNumber      (SQLite3StatementRef statement, NSInteger index, CFNumberRef value);
+int SQLite3StatementBindDouble      (SQLite3StatementRef statement, NSInteger index, double_t    value);
+int SQLite3StatementBindNULL        (SQLite3StatementRef statement, NSInteger index);
+int SQLite3StatementBindString      (SQLite3StatementRef statement, NSInteger index, CFStringRef value);
+int SQLite3StatementBindData        (SQLite3StatementRef statement, NSInteger index, CFDataRef   value);
 
 #pragma Extra binding functions
 
-int SQLite3StatementBindCFType     (SQLite3StatementRef statement, NSInteger index, CFTypeRef       value);
-int SQLite3StatementBindArray      (SQLite3StatementRef statement,                  CFArrayRef      values);
-int SQLite3StatementBindDictionary (SQLite3StatementRef statement,                  CFDictionaryRef keyValuePairs);
+int SQLite3StatementBindDateTimeWithAbsoluteTime (SQLite3StatementRef statement, NSInteger index, CFAbsoluteTime  value);
+int SQLite3StatementBindDateTimeWithDate         (SQLite3StatementRef statement, NSInteger index, CFDateRef       value);
+int SQLite3StatementBindCFType                   (SQLite3StatementRef statement, NSInteger index, CFTypeRef       value);
+int SQLite3StatementBindArray                    (SQLite3StatementRef statement,                  CFArrayRef      values);
+int SQLite3StatementBindDictionary               (SQLite3StatementRef statement,                  CFDictionaryRef keyValuePairs);
 
 #pragma Resultsets
 
-SQLite3Type SQLite3StatementGetColumnType          (SQLite3StatementRef statement, NSInteger index);
+CFIndex     SQLite3StatementGetColumnCount         (SQLite3StatementRef statement);
+SQLite3Type SQLite3StatementGetColumnType          (SQLite3StatementRef statement, CFIndex index);
 
-NSInteger   SQLite3StatementGetIntegerWithColumn   (SQLite3StatementRef statement, NSInteger index);
-int32_t     SQLite3StatementGetInt32WithColumn     (SQLite3StatementRef statement, NSInteger index);
-int64_t     SQLite3StatementGetInt64WithColumn     (SQLite3StatementRef statement, NSInteger index);
-BOOL        SQLite3StatementGetBOOLWithColumn      (SQLite3StatementRef statement, NSInteger index);
-CFStringRef SQLite3StatementCreateStringWithColumn (SQLite3StatementRef statement, NSInteger index);
-CFDataRef   SQLite3StatementCreateDataWithColumn   (SQLite3StatementRef statement, NSInteger index);
-CGImageRef  SQLite3StatementCreateImageWithColumn  (SQLite3StatementRef statement, NSInteger index);
+NSInteger   SQLite3StatementGetIntegerWithColumn   (SQLite3StatementRef statement, CFIndex index);
+int32_t     SQLite3StatementGetInt32WithColumn     (SQLite3StatementRef statement, CFIndex index);
+int64_t     SQLite3StatementGetInt64WithColumn     (SQLite3StatementRef statement, CFIndex index);
+BOOL        SQLite3StatementGetBOOLWithColumn      (SQLite3StatementRef statement, CFIndex index);
+CFStringRef SQLite3StatementCreateStringWithColumn (SQLite3StatementRef statement, CFIndex index);
+CFDataRef   SQLite3StatementCreateDataWithColumn   (SQLite3StatementRef statement, CFIndex index);
+CFDateRef   SQLite3StatementCreateDateWithColumn   (SQLite3StatementRef statement, CFIndex index);
+
+//CGImageRef  SQLite3StatementCreateImageWithColumn  (SQLite3StatementRef statement, CFIndex index);
+
+CFDictionaryRef SQLite3StatementCreateDictionaryWithAllColumns(SQLite3StatementRef statement);
 
 #pragma Name based resultsets
 

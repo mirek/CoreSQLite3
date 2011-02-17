@@ -8,28 +8,27 @@
 
 #import "CoreSQLite3.h"
 
-typedef struct {
-  CFTypeRef isa;
-  CFAllocatorRef allocator;
-  NSInteger retainCount;
-  sqlite3 *db;
+typedef struct SQLite3Connection {
+  CFAllocatorRef     allocator;
+  NSInteger          retainCount;
+  sqlite3           *db;
+  CFDateFormatterRef defaultDateFormatter;
 } SQLite3Connection;
 
 typedef SQLite3Connection* SQLite3ConnectionRef;
 
-typedef struct {
-  CFTypeRef isa;
-  CFAllocatorRef allocator;
-  NSInteger retainCount;
-  sqlite3_stmt *stmt;
+typedef struct SQLite3Statement {
+  CFAllocatorRef       allocator;
+  NSInteger            retainCount;
+  sqlite3_stmt        *stmt;
   SQLite3ConnectionRef connection;
 } SQLite3Statement;
 
 typedef SQLite3Statement *SQLite3StatementRef;
 
-typedef enum {
+typedef enum SQLite3Type {
   kSQLite3TypeInteger = SQLITE_INTEGER,
-  kSQLite3TypeDouble  = SQLITE_FLOAT,
+  kSQLite3TypeFloat   = SQLITE_FLOAT,
   kSQLite3TypeData    = SQLITE_BLOB,
   kSQLite3TypeNULL    = SQLITE_NULL,
   kSQLite3TypeString  = SQLITE_TEXT,
