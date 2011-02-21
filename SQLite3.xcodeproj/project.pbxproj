@@ -21,6 +21,9 @@
 		EB3B04841312C616009FDDA1 /* CoreSQLite3UTF8String.c in Sources */ = {isa = PBXBuildFile; fileRef = EB3B04801312C615009FDDA1 /* CoreSQLite3UTF8String.c */; };
 		EB3B04851312C616009FDDA1 /* CoreSQLite3UTF8String.h in Headers */ = {isa = PBXBuildFile; fileRef = EB3B04811312C616009FDDA1 /* CoreSQLite3UTF8String.h */; };
 		EB3B04861312C616009FDDA1 /* CoreSQLite3UTF8String.h in Headers */ = {isa = PBXBuildFile; fileRef = EB3B04811312C616009FDDA1 /* CoreSQLite3UTF8String.h */; };
+		EB3B04881312CD3A009FDDA1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB3B04871312CD3A009FDDA1 /* Cocoa.framework */; };
+		EB3B04891312CD43009FDDA1 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB3B04661312BEB5009FDDA1 /* CoreFoundation.framework */; };
+		EB3B048C1312CD88009FDDA1 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = EB0C651F1312A20300F18BB6 /* sqlite3.c */; };
 		EBA817551303FAD900F59716 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = EBA817531303FAD900F59716 /* InfoPlist.strings */; };
 		EBA817581303FAD900F59716 /* Tests.h in Resources */ = {isa = PBXBuildFile; fileRef = EBA817571303FAD900F59716 /* Tests.h */; };
 		EBA8175A1303FAD900F59716 /* Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = EBA817591303FAD900F59716 /* Tests.m */; };
@@ -40,6 +43,16 @@
 		EBB1ADCC1312A6CE006476A7 /* SQLite3Migration.h in Headers */ = {isa = PBXBuildFile; fileRef = EBA8173E1301B50700F59716 /* SQLite3Migration.h */; settings = {ATTRIBUTES = (Private, ); }; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		EB3B048A1312CD5A009FDDA1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB3B044F1312BE64009FDDA1;
+			remoteInfo = CoreSQLite3;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* SQLite3_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLite3_Prefix.pch; sourceTree = "<group>"; };
@@ -58,6 +71,7 @@
 		EB3B04661312BEB5009FDDA1 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		EB3B04801312C615009FDDA1 /* CoreSQLite3UTF8String.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = CoreSQLite3UTF8String.c; sourceTree = "<group>"; };
 		EB3B04811312C616009FDDA1 /* CoreSQLite3UTF8String.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreSQLite3UTF8String.h; sourceTree = "<group>"; };
+		EB3B04871312CD3A009FDDA1 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		EB3E466B13003EFF007AF9C4 /* CoreSQLite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreSQLite3.h; sourceTree = "<group>"; };
 		EB3E4AA913004C80007AF9C4 /* ibiza.db */ = {isa = PBXFileReference; lastKnownFileType = file; path = ibiza.db; sourceTree = "<group>"; };
 		EBA5182013003B1000F50C8E /* SQLite3Connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLite3Connection.h; sourceTree = "<group>"; };
@@ -99,6 +113,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB3B04881312CD3A009FDDA1 /* Cocoa.framework in Frameworks */,
+				EB3B04891312CD43009FDDA1 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +232,7 @@
 		EB3B044A1312BE0C009FDDA1 /* OSX */ = {
 			isa = PBXGroup;
 			children = (
+				EB3B04871312CD3A009FDDA1 /* Cocoa.framework */,
 				EB3B04661312BEB5009FDDA1 /* CoreFoundation.framework */,
 			);
 			name = OSX;
@@ -334,6 +351,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				EB3B048B1312CD5A009FDDA1 /* PBXTargetDependency */,
 			);
 			name = Tests;
 			productName = Tests;
@@ -441,10 +459,19 @@
 				EBA8176C1303FD8700F59716 /* SQLite3Migration.c in Sources */,
 				EBA8175A1303FAD900F59716 /* Tests.m in Sources */,
 				EB3B04831312C616009FDDA1 /* CoreSQLite3UTF8String.c in Sources */,
+				EB3B048C1312CD88009FDDA1 /* sqlite3.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		EB3B048B1312CD5A009FDDA1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB3B044F1312BE64009FDDA1 /* CoreSQLite3 */;
+			targetProxy = EB3B048A1312CD5A009FDDA1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		089C1666FE841158C02AAC07 /* InfoPlist.strings */ = {
