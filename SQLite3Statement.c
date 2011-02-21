@@ -156,7 +156,7 @@ inline int SQLite3StatementBindString(SQLite3StatementRef statement, CFIndex ind
 #pragma Extra binding functions
 
 inline int SQLite3StatementBindNumber(SQLite3StatementRef statement, CFIndex index, CFNumberRef value) {
-  int result;
+  int result = -1;
   if (value) {
     switch (CFNumberGetType(value)) {
       case kCFNumberSInt8Type:
@@ -300,30 +300,27 @@ inline CFDataRef SQLite3StatementCreateDataWithColumn(SQLite3StatementRef statem
 
 inline CFDateRef SQLite3StatementCreateDateWithColumn(SQLite3StatementRef statement, CFIndex index) {
   CFDateRef result = NULL;
+  CFStringRef string = NULL;
   switch (SQLite3StatementGetColumnType(statement, index)) {
       
     // For integer and float, we're interpreting as unix timestamp
     case kSQLite3TypeInteger:
     case kSQLite3TypeFloat:
-    {
       result = CFDateCreate(statement->allocator, SQLite3StatementGetInt64WithColumn(statement, index) - kCFAbsoluteTimeIntervalSince1970);
-    }
+      break;
       
     // For string we're using default format
     case kSQLite3TypeString:
-    {
-      CFStringRef value = SQLite3StatementCreateStringWithColumn(statement, index);
-      result = CFDateFormatterCreateDateFromString(statement->allocator, statement->connection->defaultDateFormatter, value, NULL);
-      CFRelease(value);
-    }
+      string = SQLite3StatementCreateStringWithColumn(statement, index);
+      result = CFDateFormatterCreateDateFromString(statement->allocator, statement->connection->defaultDateFormatter, string, NULL);
+      CFRelease(string);
+      break;
     
     // For blobs, nulls (or unknown column type?) we're leaving it as NULL
     case kSQLite3TypeData:
     case kSQLite3TypeNULL:
     default:
-    {
-      // leave NULL
-    }
+      break;
   }
   return result;
 }
@@ -409,22 +406,23 @@ inline void SQLite3InsertWithDictionary(SQLite3ConnectionRef connection, CFStrin
   
   // Ignore insert if the number of arguments is less than zero
   if (n > 0) {
-    const void **keys = CFAllocatorAllocate(NULL, sizeof(void *) * n, 0);
-    const void **values = CFAllocatorAllocate(NULL, sizeof(void *) * n, 0);
+    const void **keys = CFAllocatorAllocate(connection->allocator, sizeof(void *) * n, 0);
+    const void **values = CFAllocatorAllocate(connection->allocator, sizeof(void *) * n, 0);
     CFDictionaryGetKeysAndValues(dictionary, keys, values);
-    CFArrayRef keysArray = CFArrayCreate(NULL, keys, n, &kCFTypeArrayCallBacks);
-    CFArrayRef valuesArray = CFArrayCreate(NULL, values, n, &kCFTypeArrayCallBacks);
-    CFStringRef keysString = CFStringCreateByCombiningStrings(NULL, keysArray, CFSTR(", "));
-    const char *valuesCString = _SQLite3CreateValuesPlaceholderCString(NULL, n);
-    CFStringRef sql = CFStringCreateWithFormat(NULL, NULL, CFSTR("INSERT INTO %@(%@) VALUES(%s)"), table, keysString, valuesCString);
+    CFArrayRef keysArray = CFArrayCreate(connection->allocator, keys, n, &kCFTypeArrayCallBacks);
+    CFArrayRef valuesArray = CFArrayCreate(connection->allocator, values, n, &kCFTypeArrayCallBacks);
+    CFStringRef keysString = CFStringCreateByCombiningStrings(connection->allocator, keysArray, CFSTR(", "));
+    const char *valuesCString = _SQLite3CreateValuesPlaceholderCString(connection->allocator, n);
+    CFStringRef sql = CFStringCreateWithFormat(connection->allocator, NULL, CFSTR("INSERT INTO %@(%@) VALUES(%s)"), table, keysString, valuesCString);
     SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
     SQLite3StatementBindArray(statement, valuesArray);
     SQLite3StatementExecute(statement);
     CFRelease(sql);
-    CFAllocatorDeallocate(NULL, (void *)valuesCString);
+    CFAllocatorDeallocate(connection->allocator, (void *)valuesCString);
     CFRelease(keysString);
+    CFRelease(valuesArray);
     CFRelease(keysArray);
-    CFAllocatorDeallocate(NULL, keys);
-    CFAllocatorDeallocate(NULL, values);
+    CFAllocatorDeallocate(connection->allocator, keys);
+    CFAllocatorDeallocate(connection->allocator, values);
   }
 }

@@ -99,7 +99,7 @@ CFErrorRef SQLite3ConnectionCreateError(SQLite3ConnectionRef connection) {
     CFDictionaryRef userInfo = CFDictionaryCreate(NULL, (void *)keys, (void *)values, 1, &kCFCopyStringDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     error = CFErrorCreate(NULL, CFSTR("com.github.mirek.CoreSQLite3"), errcode, userInfo);
     CFRelease(userInfo);
-    CFRelease(values[1]);
+    CFRelease(values[0]);
   }
   return error;
 }
