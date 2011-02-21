@@ -6,8 +6,7 @@
 // Copyright 2011 Inteliv Ltd. All rights reserved.
 //
 
-#import "SQLite3Connection.h"
-
+#include "SQLite3Connection.h"
 
 #pragma Lifecycle
 
@@ -21,7 +20,10 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
     connection->defaultDateFormatter = CFDateFormatterCreate(NULL, NULL, kCFDateFormatterNoStyle, kCFDateFormatterNoStyle);
     CFDateFormatterSetFormat(connection->defaultDateFormatter, CFSTR("yyyy-MM-dd HH:mm:ss"));
     
-    int sqlite3_open_v2_result = sqlite3_open_v2([(NSString *)path UTF8String], &connection->db, flags, zVfs);
+    __SQLite3UTF8String utf8Path = __SQLite3UTF8StringMake(connection->allocator, path);
+    int sqlite3_open_v2_result = sqlite3_open_v2(__SQLite3UTF8StringGetBuffer(utf8Path), &connection->db, flags, zVfs);
+    __SQLite3UTF8StringDestroy(utf8Path);
+    
     if (sqlite3_open_v2_result == SQLITE_OK) {
       // OK
     } else {
@@ -76,7 +78,7 @@ inline SQLite3ConnectionRef SQLite3ConnectionRelease(SQLite3ConnectionRef connec
   return connection;
 }
 
-inline NSUInteger SQLite3ConnectionGetRetainCount(SQLite3ConnectionRef connection) {
+inline CFIndex SQLite3ConnectionGetRetainCount(SQLite3ConnectionRef connection) {
   return connection->retainCount;
 }
 
@@ -103,8 +105,8 @@ CFErrorRef SQLite3ConnectionCreateError(SQLite3ConnectionRef connection) {
 }
 
 // If the connection is NULL or sqlite3 connection has an error, return YES. Otherwise return NO.
-inline BOOL SQLite3ConnectionHasError(SQLite3ConnectionRef connection) {
-  return connection ? sqlite3_errcode(connection->db) != SQLITE_OK : YES;
+inline bool SQLite3ConnectionHasError(SQLite3ConnectionRef connection) {
+  return connection ? sqlite3_errcode(connection->db) != SQLITE_OK : 1;
 }
 
 // Return NULL if the connection is not allocated. Otherwise return sqlite3 connection.
@@ -129,7 +131,9 @@ inline int SQLite3ConnectionExecutev(SQLite3ConnectionRef connection, CFStringRe
 inline int SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef sql) {
   int code = SQLITE_ERROR;
   if (sql) {
-    code = sqlite3_exec(connection->db, [(NSString *)sql UTF8String], NULL, NULL, NULL);
+    __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringMake(connection->allocator, sql);
+    code = sqlite3_exec(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), NULL, NULL, NULL);
+    __SQLite3UTF8StringDestroy(utf8Sql);
 //    SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
 //    code = SQLite3StatementExecute(statement);
 //    SQLite3StatementRelease(statement);
@@ -140,10 +144,17 @@ inline int SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef
 // Executes UTF-8 sql file.
 inline int SQLite3ConnectionExecuteWithContentsOfFileAtPath(SQLite3ConnectionRef connection, CFStringRef path) {
   // TODO: Remove Objective-C
-  CFStringRef sql = (CFStringRef)[[NSString alloc] initWithContentsOfFile: (NSString *)path encoding: NSUTF8StringEncoding error: nil];
-  int result = SQLite3ConnectionExecute(connection, sql);
-  CFRelease(sql);
-  return result;
+  
+//  __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringCreate(connection->allocator, sql);
+//  __SQLite3UTF8StringGetBuffer(utf8Sql)
+//  __SQLite3UTFStringDestroy(utf8Sql);
+
+  
+//  CFStringRef sql = (CFStringRef)[[NSString alloc] initWithContentsOfFile: (NSString *)path encoding: NSUTF8StringEncoding error: nil];
+//  int result = SQLite3ConnectionExecute(connection, sql);
+//  CFRelease(sql);
+//  return result;
+  return -1;
 }
 
 inline int32_t SQLite3ConnectionGetInt32WithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
@@ -171,8 +182,8 @@ inline int64_t SQLite3ConnectionGetInt64WithQuery(SQLite3ConnectionRef connectio
   return value;
 }
 
-inline BOOL SQLite3ConnectionGetBOOLWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
-  BOOL value = 0;
+inline bool SQLite3ConnectionGetBOOLWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
+  bool value = 0;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
   for (; SQLite3StatementStep(statement) == SQLITE_ROW; ) {
     value = SQLite3StatementGetBOOLWithColumn(statement, 0);
@@ -237,17 +248,17 @@ inline CFDictionaryRef SQLite3ConnectionCreateDictionaryForAllColumnsWithQuery(S
   return value;
 }
 
-BOOL SQLite3ConnectionDoesTableExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
+bool SQLite3ConnectionDoesTableExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
 //  CFStringRef sql = CFStringCreateWithFormat(connection->allocator, CFSTR(""), )
 //  BOOL value = SQLite3ConnectionGetBOOLWithQuery(connection, );
 //  return value;
-  return NO;
+  return 0;
 }
 
-BOOL SQLite3ConnectionDoesViewExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
-  return NO;
+bool SQLite3ConnectionDoesViewExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
+  return 0;
 }
 
-BOOL SQLite3ConnectionDoesTableOrViewExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
-  return NO;
+bool SQLite3ConnectionDoesTableOrViewExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
+  return 0;
 }

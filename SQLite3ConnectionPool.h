@@ -6,7 +6,10 @@
 // Copyright 2011 Inteliv Ltd. All rights reserved.
 //
 
-#import "CoreSQLite3.h"
+#if !defined(__CORE_SQLITE3_CONNECTION_POOL__)
+#define __CORE_SQLITE3_CONNECTION_POOL__ 1
+
+#include "CoreSQLite3.h"
 
 typedef struct {
   CFTypeRef isa;
@@ -15,3 +18,5 @@ typedef struct {
 } SQLite3ConnectionPool;
 
 typedef SQLite3ConnectionPool* SQLite3ConnectionPoolRef;
+
+#endif

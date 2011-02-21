@@ -8,9 +8,11 @@
 
 #import "CoreSQLite3.h"
 
+#pragma Public types
+
 typedef struct SQLite3Connection {
   CFAllocatorRef     allocator;
-  NSInteger          retainCount;
+  CFIndex            retainCount;
   sqlite3           *db;
   CFDateFormatterRef defaultDateFormatter;
 } SQLite3Connection;
@@ -19,7 +21,7 @@ typedef SQLite3Connection* SQLite3ConnectionRef;
 
 typedef struct SQLite3Statement {
   CFAllocatorRef       allocator;
-  NSInteger            retainCount;
+  CFIndex              retainCount;
   sqlite3_stmt        *stmt;
   SQLite3ConnectionRef connection;
 } SQLite3Statement;

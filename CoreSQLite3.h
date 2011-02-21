@@ -9,19 +9,22 @@
 #if !defined(__CORE_SQLITE3__)
 #define __CORE_SQLITE3__ 1
 
-#import <CoreFoundation/CoreFoundation.h>
-#import "sqlite3.h"
-#import "dirent.h"
+#include <CoreFoundation/CoreFoundation.h>
+#include "sqlite3.h"
+#include "dirent.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
-#import "SQLite3Types.h"
-#import "SQLite3Connection.h"
-#import "SQLite3ConnectionPool.h"
-#import "SQLite3Statement.h"
-#import "SQLite3Migration.h"
+
+// Internal
+#include "CoreSQLite3UTF8String.h"
+
+#include "SQLite3Types.h"
+#include "SQLite3Connection.h"
+#include "SQLite3ConnectionPool.h"
+#include "SQLite3Statement.h"
+#include "SQLite3Migration.h"
 
 #ifdef __cplusplus
 }

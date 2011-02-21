@@ -6,11 +6,11 @@
 // Copyright 2011 Inteliv Ltd. All rights reserved.
 //
 
-#import "SQLite3Migration.h"
+#include "SQLite3Migration.h"
 
 #define SQLite3MigrationMaxCount 4096
 
-inline BOOL SQLite3MigrationDoesTableExist(SQLite3ConnectionRef connection) {
+inline bool SQLite3MigrationDoesTableExist(SQLite3ConnectionRef connection) {
   return SQLite3ConnectionDoesTableExistWithName(connection, CFSTR("schema_migrations"));
 }
 
@@ -37,8 +37,8 @@ inline CFArrayRef SQLite3MigrationCreateVersionsArray(SQLite3ConnectionRef conne
 }
 
 // Check if the migration with provided version has been already performed.
-inline BOOL SQLite3MigrationDidMigratedVersion(SQLite3ConnectionRef connection, CFStringRef version) {
-  BOOL didMigrated = NO;
+inline bool SQLite3MigrationDidMigratedVersion(SQLite3ConnectionRef connection, CFStringRef version) {
+  bool didMigrated = 0;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select exists(select * from schema_migrations where version = ?)"));
   SQLite3StatementBindString(statement, 1, version);
   while (SQLite3StatementStep(statement) == SQLITE_ROW) {
@@ -49,7 +49,7 @@ inline BOOL SQLite3MigrationDidMigratedVersion(SQLite3ConnectionRef connection, 
 }
 
 // Return true on success, false otherwise.
-inline BOOL SQLite3MigrationExecute(SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql) {
+inline bool SQLite3MigrationExecute(SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql) {
   SQLite3ConnectionExecute(connection, sql);
   if (!SQLite3ConnectionHasError(connection)) {
     SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into schema_migrations(version) values(?)"));
@@ -75,8 +75,8 @@ inline CFStringRef SQLite3MigrationCreateVersionStringWithPath(CFAllocatorRef al
   return version;
 }
 
-inline BOOL SQLite3MigrationWithDirectoryPath(SQLite3ConnectionRef connection, CFStringRef path) {  
-  BOOL result = YES;
+inline bool SQLite3MigrationWithDirectoryPath(SQLite3ConnectionRef connection, CFStringRef path) {  
+  bool result = 1;
 //  DIR *dir;
 //  struct dirent *ent;
 //  size_t bufferLength = CFStringGetMaximumSizeOfFileSystemRepresentation(path);

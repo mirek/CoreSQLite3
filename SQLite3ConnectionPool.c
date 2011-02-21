@@ -6,7 +6,7 @@
 // Copyright 2011 Inteliv Ltd. All rights reserved.
 //
 
-#import "SQLite3ConnectionPool.h"
+#include "SQLite3ConnectionPool.h"
 
 SQLite3ConnectionPoolRef SQLite3ConnectionPoolCreateWithPath(CFStringRef path) {
   return NULL;

@@ -6,8 +6,11 @@
 // Copyright 2011 Inteliv Ltd. All rights reserved.
 //
 
-#import "CoreSQLite3.h"
-#import "dirent.h"
+#if !defined(__CORE_SQLITE3_MIGRATION__)
+#define __CORE_SQLITE3_MIGRATION__ 1
+
+#include "CoreSQLite3.h"
+#include "dirent.h"
 
 #define SQLite3MigrationTableName      "schema_changes"
 #define SQLite3MigrationCreateTableSQL "create table schema_changes(version varchar)"
@@ -25,5 +28,7 @@ CFStringRef SQLite3MigrationCreateVersionStringWithPath(CFAllocatorRef allocator
 
 #pragma Migration functionality
 
-BOOL SQLite3MigrationExecute(SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);
-BOOL SQLite3MigrationWithDirectoryPath(SQLite3ConnectionRef connection, CFStringRef path);
+bool SQLite3MigrationExecute(SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);
+bool SQLite3MigrationWithDirectoryPath(SQLite3ConnectionRef connection, CFStringRef path);
+
+#endif
