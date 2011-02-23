@@ -12,21 +12,70 @@
 
 - (void) setUp {
   [super setUp];
-  connection = SQLite3ConnectionCreate(CFSTR(":memory:"), SQLITE_OPEN_READWRITE, NULL);
+  allocator = TestAllocatorCreate();
+  connection = SQLite3ConnectionCreate(allocator, CFSTR("/Users/Mirek/my.db"), SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
   STAssertTrue(connection != NULL, @"Connection should be allocated");
   STAssertFalse(SQLite3ConnectionHasError(connection), @"Connection should't have errors, but got '%s'", sqlite3_errmsg(connection->db));
 }
 
 - (void) tearDown {
+  //CFRelease(allocator);
+  SQLite3ConnectionRelease(connection);
+  //STAssertTrue(NULL == , @"Connection should be released");
   [super tearDown];
-  STAssertTrue(NULL == SQLite3ConnectionRelease(connection), @"Connection should be released");
 }
 
 - (void) testCreateUsersTable {
   NSError *error = nil;
-  SQLite3ConnectionExecute(connection, (CFStringRef)@"create table users(id int primary key, username varchar, name varchar, surname varchar)");
+  
+  SQLite3ConnectionDropTableIfExists(connection, CFSTR("users"));
+  
+  SQLite3ConnectionExecute(connection, (CFStringRef)@"create table users(id int primary key, username varchar, name varchar, surname varchar, data text)");
   STAssertNil(error = (NSError *)SQLite3ConnectionCreateError(connection), @"Connection should't have error %@", error);
-  //STAssertTrue(SQLite3, <#description#>, <#...#>)
+  
+  NSDictionary *user = [[NSDictionary alloc] initWithObjectsAndKeys:
+                        [NSNumber numberWithInt: 1],     @"id",
+                        @"mirek", @"username",
+                        @"Mirek", @"name",
+                        @"Rusin", @"surname",
+                        nil];
+  
+  NSArray *userArray = [[NSArray alloc] initWithObjects: @"mirek2", @"Mirek", @"Rusin", nil];
+
+  SQLite3ConnectionExecuteWithDictionaryBindings(connection, (CFStringRef)@"insert into users(name, username, surname) values(:name, :username, :surname)", (CFDictionaryRef)user);
+  
+  SQLite3ConnectionExecuteWithArrayBindings(connection, (CFStringRef)@"insert into users(username, name, surname) values(?, ?, ?)", (CFArrayRef)userArray);
+
+//  NSDictionary *user2 = (NSDictionary *)SQLite3ConnectionCreateDictionaryForAllColumnsWithQuery(connection, CFSTR("select * from users limit 1"));
+//  NSLog(@"user %@", user2);
+
+  STAssertEquals(2, SQLite3ConnectionGetInt32WithQuery(connection, CFSTR("select count(*) from users")), @"Should be 2 users");
+
+  {
+    NSDictionary *preferences = [NSDictionary dictionaryWithObjectsAndKeys:
+                                 [NSArray arrayWithObjects: @"English", @"German", nil], @"languages",
+                                 @"English", @"preferred",
+                                 nil];
+    SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into users(data) values(?)"));
+//    NSLog(@"%@", SQLite3ConnectionCreateError(connection));
+//    SQLite3StatementBindInt32(statement, 2, 1);
+//    NSLog(@"%@", SQLite3ConnectionCreateError(connection));
+    SQLite3StatementBindPropertyList(statement, 1, preferences, kCFPropertyListXMLFormat_v1_0);
+//    NSLog(@"%@", SQLite3ConnectionCreateError(connection));
+    for (int i = 0; SQLite3StatementStep(statement) == SQLITE_OK; i++) {
+//      NSLog(@"i %@", SQLite3ConnectionCreateError(connection));
+    }
+//    NSLog(@"%@", SQLite3ConnectionCreateError(connection));
+//    SQLite3StatementExecute(statement);
+    
+    STAssertEquals(1, SQLite3ConnectionGetInt32WithQuery(connection, CFSTR("select count(*) from users where data is not null")), @"Should be one user with data");
+    
+    NSLog(@"result is: %@", SQLite3ConnectionCreatePropertyListWithQuery(connection, CFSTR("select data from users where data is not null"), kCFPropertyListImmutable, NULL, NULL));
+  }
+  
+  
+  [user release];
+  
   [error release];
 }
 

@@ -8,9 +8,11 @@
 
 #import <SenTestingKit/SenTestingKit.h>
 #import "CoreSQLite3.h"
+#import "TestAllocator.h"
 
 @interface Tests : SenTestCase {
 @private
+  CFAllocatorRef allocator;
   SQLite3ConnectionRef connection;
 }
 
