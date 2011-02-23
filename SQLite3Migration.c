@@ -8,10 +8,12 @@
 
 #include "SQLite3Migration.h"
 
-#define SQLite3MigrationMaxCount 4096
-
 #pragma Global stuff
 
+// Migration files are using names with the following convention:
+// * file names ending with ".sql" are considered migration files
+// * file names ending with ".undo.sql" are considered undo-migration files (reverting ".sql" migrations)
+// ...read more at SQLite3MigrationCreateVersionStringWithPath
 SQLite3MigrationType SQLite3MigrationGetTypeWithPath(CFStringRef path) {
   return CFStringHasSuffix(path, CFSTR(".sql")) ? (CFStringHasSuffix(path, CFSTR(".undo.sql")) ?
                                                    kSQLite3MigrationTypeUndoMigration :
@@ -19,82 +21,80 @@ SQLite3MigrationType SQLite3MigrationGetTypeWithPath(CFStringRef path) {
                                                    kSQLite3MigrationTypeUnknown;
 }
 
+CFStringRef SQLite3MigrationCreateVersionStringWithURL(CFAllocatorRef allocator, CFURLRef url) {
+  CFStringRef path = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+  CFStringRef version = SQLite3MigrationCreateVersionStringWithPath(allocator, path);
+  CFRelease(path);
+  return version;
+}
+
+// ...additionally, the `version` of the migration starts at the begining of the filename and ends
+// before the first occurance of "." character or end of the filename.
+//
+// Migration versions are invoked in the lexicological order.
+//
+// Examples:
+// * ../migrations/2010-02-23_19-25-00.init.sql      -- ok, migration file
+// * ../migrations/2010-02-23_19-25-00.init.undo.sql -- ok, undo-migration file (reverting previous file)
+// * ../migrations/1.sql                             -- not recommended, use 001.sql instead or date based filenames
 CFStringRef SQLite3MigrationCreateVersionStringWithPath(CFAllocatorRef allocator, CFStringRef path) {
   CFStringRef version = NULL;
   CFIndex startIndex = CFStringFind(path, CFSTR("/"), kCFCompareCaseInsensitive | kCFCompareBackwards).location;
   CFIndex endIndex = CFStringFind(path, CFSTR("."), kCFCompareCaseInsensitive).location;
-  
   startIndex = startIndex + 1;
   endIndex = endIndex < 0 ? CFStringGetLength(path) : endIndex;
-  
   if (endIndex > startIndex)
     version = CFStringCreateWithSubstring(allocator, path, CFRangeMake(startIndex, endIndex - startIndex));
   return version;
 }
 
-CFMutableArrayRef SQlite3MigrationCreateFilenameArrayWithDirectory(CFAllocatorRef allocator, CFStringRef directory) {
+// Returns an CFArrayRef of CFURLRefs for the migration files (migration and undo-migration files).
+CFMutableArrayRef SQlite3MigrationCreateURLsArrayWithDirectoryURL(CFAllocatorRef allocator, CFURLRef directoryURL) {
   CFMutableArrayRef array = NULL;
-  if (directory) {
+  if (directoryURL) {
+    CFStringRef directory = CFURLCopyFileSystemPath(directoryURL, kCFURLPOSIXPathStyle);
     __SQLite3UTF8String utf8Directory = __SQLite3UTF8StringMake(allocator, directory);
     DIR *dir = opendir(__SQLite3UTF8StringGetBuffer(utf8Directory));
     struct dirent *ent = NULL;
     if (dir != NULL) {
       array = CFArrayCreateMutable(allocator, 0, &kCFTypeArrayCallBacks);
       while ((ent = readdir(dir)) != NULL) {
-        CFStringRef filename = CFStringCreateWithCString(NULL, ent->d_name, kCFStringEncodingUTF8);
-        CFArrayAppendValue(array, filename);
+        CFStringRef filename = CFStringCreateWithCString(allocator, ent->d_name, kCFStringEncodingUTF8);
+        switch (SQLite3MigrationGetTypeWithPath(filename)) {
+          case kSQLite3MigrationTypeMigration:
+          case kSQLite3MigrationTypeUndoMigration:
+          {
+            CFURLRef url = CFURLCreateWithFileSystemPathRelativeToBase(allocator, filename, kCFURLPOSIXPathStyle, 0, directoryURL);
+            CFArrayAppendValue(array, url);
+            CFRelease(url);
+            break;
+          }
+            
+          default:
+            break;
+        }
         CFRelease(filename);
       }
     }
     __SQLite3UTF8StringDestroy(utf8Directory);
+    CFRelease(directory);
   }
   return array;
-  
-  //  struct dirent *ent;
-  //  size_t bufferLength = CFStringGetMaximumSizeOfFileSystemRepresentation(path);
-  //  const char *buffer = CFAllocatorAllocate(connection->allocator, bufferLength, 0);
-  //  CFStringGetFileSystemRepresentation(path, (char *)buffer, bufferLength);
-  //  dir = opendir(buffer);
-  //  
-  //  if (dir != NULL) {
-  //    while ((ent = readdir(dir)) != NULL) {
-  //      CFStringRef filename = CFStringCreateWithCString(NULL, ent->d_name, kCFStringEncodingUTF8);
-  //      switch (SQLite3MigrationGetTypeWithPath(filename)) {
-  //        case kSQLite3MigrationTypeMigration:
-  //        {
-  //          CFStringRef version = SQLite3MigrationCreateVersionStringWithPath(connection->allocator, filename);
-  //          //NSLog(@"will load %@", path_);
-  //          
-  //          CFURLRef fullPathURL = CFURLCreateCopyAppendingPathComponent(connection->allocator, directory, path_, NO);
-  //          CFStringRef fullPath = CFURLCopyPath(url);
-  //          
-  //          CFStringRef sql = (CFStringRef)[[NSString alloc] initWithContentsOfFile: (NSString *)path_ encoding: NSUTF8StringEncoding error: NULL];
-  //          result = SQLite3MigrationExecute(connection, version, sql) ? result : NO;
-  //          CFRelease(sql);
-  //          CFRelease(version);
-  //        }
-  //        default:
-  //        {
-  //        }
-  //      }
-  //      CFRelease(path_);
-  //    }
-  //    closedir (dir);
-  //  } else {
-  //    // Could not open directory
-  //  }
 }
 
 #pragma Connection related stuff
 
+// Return true if migration table (schema_migrations) exists, false otherwise.
 bool SQLite3MigrationDoesTableExist(SQLite3ConnectionRef connection) {
   return SQLite3ConnectionDoesTableExist(connection, CFSTR("schema_migrations"));
 }
 
-SQLite3Status SQLite3MigrationCreateTable(SQLite3ConnectionRef connection) {
+// Create migrations table if it doesn't exist yet.
+// Return kSQLite3StatusOK if the table already exists or execute status after invoking create table query.
+SQLite3Status SQLite3MigrationCreateTableIfDoesntExist(SQLite3ConnectionRef connection) {
   SQLite3Status status = kSQLite3StatusOK;
   if (!SQLite3MigrationDoesTableExist(connection))
-    status = SQLite3ConnectionExecute(connection, CFSTR("create table schema_migrations(version string)"));
+    status = SQLite3ConnectionExecute(connection, CFSTR("create table schema_migrations(version string);"));
   return status;
 }
 
@@ -104,7 +104,7 @@ CFArrayRef SQLite3MigrationCreateVersionsArray(SQLite3ConnectionRef connection) 
   CFMutableArrayRef versions = NULL;
   if (SQLite3MigrationDoesTableExist(connection)) {
     versions = CFArrayCreateMutable(connection->allocator, 0, &kCFTypeArrayCallBacks);
-    SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select version from schema_migrations"));
+    SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select version from schema_migrations;"));
     while (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
       CFStringRef version = SQLite3StatementCreateStringWithColumn(statement, 0);
       CFArrayAppendValue(versions, version);
@@ -119,10 +119,12 @@ CFArrayRef SQLite3MigrationCreateVersionsArray(SQLite3ConnectionRef connection) 
 // Check if the migration with provided version has been already performed.
 bool SQLite3MigrationDidMigratedVersion(SQLite3ConnectionRef connection, CFStringRef version) {
   bool didMigrated = 0;
-  SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select exists(select * from schema_migrations where version = ?)"));
+  SQLite3Status status = SQLite3MigrationCreateTableIfDoesntExist(connection);
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select exists(select * from schema_migrations where version = ?);"));
   SQLite3StatementBindString(statement, 1, version);
   if (kSQLite3StatusRow == SQLite3StatementStep(statement))
     didMigrated = SQLite3StatementGetBOOLWithColumn(statement, 0);
+  SQLite3StatementReset(statement);
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
@@ -132,9 +134,10 @@ bool SQLite3MigrationDidMigratedVersion(SQLite3ConnectionRef connection, CFStrin
 SQLite3Status SQLite3MigrationInsertVersion(SQLite3ConnectionRef connection, CFStringRef version) {
   SQLite3Status status = kSQLite3StatusError;
   if (!SQLite3MigrationDidMigratedVersion(connection, version)) {
-    SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into schema_migrations(version) values(?)"));
+    SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into schema_migrations(version) values(?);"));
     SQLite3StatementBindString(statement, 1, version);
     status = SQLite3StatementStep(statement);
+    SQLite3StatementReset(statement);
     SQLite3StatementClearBindings(statement);
     SQLite3StatementFinalize(statement);
     SQLite3StatementRelease(statement);
@@ -148,6 +151,7 @@ SQLite3Status SQLite3MigrationDeleteVersion(SQLite3ConnectionRef connection, CFS
     SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("delete from schema_migrations where version = ?"));
     SQLite3StatementBindString(statement, 1, version);
     status = SQLite3StatementStep(statement);
+    SQLite3StatementReset(statement);
     SQLite3StatementClearBindings(statement);
     SQLite3StatementFinalize(statement);
     SQLite3StatementRelease(statement);
@@ -155,8 +159,22 @@ SQLite3Status SQLite3MigrationDeleteVersion(SQLite3ConnectionRef connection, CFS
   return status;
 }
 
+SQLite3Status SQLite3MigrationExecuteWithContentsOfURL(SQLite3ConnectionRef connection, CFURLRef url) {
+  SQLite3Status status = SQLite3MigrationCreateTableIfDoesntExist(connection);
+  CFStringRef version = SQLite3MigrationCreateVersionStringWithURL(connection->allocator, url);
+  if (version) {
+    if (!SQLite3MigrationDidMigratedVersion(connection, version)) {
+      // TODO: transaction
+      status = SQLite3ConnectionExecuteWithContentsOfURL(connection, url);
+      SQLite3MigrationInsertVersion(connection, version); // TODO: check status
+    }
+    CFRelease(version);
+  }
+  return status;
+}
+
 SQLite3Status SQLite3MigrationExecute(SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql) {
-  SQLite3Status status = kSQLite3StatusOK;
+  SQLite3Status status = SQLite3MigrationCreateTableIfDoesntExist(connection);
   if (!SQLite3MigrationDidMigratedVersion(connection, version)) {
     // TODO: transaction
     status = SQLite3ConnectionExecute(connection, sql);
@@ -166,7 +184,7 @@ SQLite3Status SQLite3MigrationExecute(SQLite3ConnectionRef connection, CFStringR
 }
 
 SQLite3Status SQLite3MigrationExecuteUndo(SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql) {
-  SQLite3Status status = kSQLite3StatusOK;
+  SQLite3Status status = SQLite3MigrationCreateTableIfDoesntExist(connection);
   if (SQLite3MigrationDidMigratedVersion(connection, version)) {
     // TODO: transaction
     status = SQLite3ConnectionExecute(connection, sql);
@@ -175,40 +193,14 @@ SQLite3Status SQLite3MigrationExecuteUndo(SQLite3ConnectionRef connection, CFStr
   return status;
 }
 
-bool SQLite3MigrationWithDirectoryPath(SQLite3ConnectionRef connection, CFStringRef path) {  
-  bool result = 1;
-//  DIR *dir;
-//  struct dirent *ent;
-//  size_t bufferLength = CFStringGetMaximumSizeOfFileSystemRepresentation(path);
-//  const char *buffer = CFAllocatorAllocate(connection->allocator, bufferLength, 0);
-//  CFStringGetFileSystemRepresentation(path, (char *)buffer, bufferLength);
-//  dir = opendir(buffer);
-//  if (dir != NULL) {
-//    while ((ent = readdir(dir)) != NULL) {
-//      CFStringRef filename = CFStringCreateWithCString(NULL, ent->d_name, kCFStringEncodingUTF8);
-//      switch (SQLite3MigrationGetTypeWithPath(filename)) {
-//        case kSQLite3MigrationTypeMigration:
-//        {
-//          CFStringRef version = SQLite3MigrationCreateVersionStringWithPath(connection->allocator, filename);
-//          //NSLog(@"will load %@", path_);
-//          
-//          CFURLRef fullPathURL = CFURLCreateCopyAppendingPathComponent(connection->allocator, directory, path_, NO);
-//          CFStringRef fullPath = CFURLCopyPath(url);
-//          
-//          CFStringRef sql = (CFStringRef)[[NSString alloc] initWithContentsOfFile: (NSString *)path_ encoding: NSUTF8StringEncoding error: NULL];
-//          result = SQLite3MigrationExecute(connection, version, sql) ? result : NO;
-//          CFRelease(sql);
-//          CFRelease(version);
-//        }
-//        default:
-//        {
-//        }
-//      }
-//      CFRelease(path_);
-//    }
-//    closedir (dir);
-//  } else {
-//    // Could not open directory
-//  }
-  return result;
+inline SQLite3Status SQLite3MigrationMigrateWithDirectoryURL(SQLite3ConnectionRef connection, CFURLRef directoryURL) {
+  SQLite3Status status = kSQLite3StatusError;
+  CFArrayRef array = SQlite3MigrationCreateURLsArrayWithDirectoryURL(connection->allocator, directoryURL);
+  if (array) {
+    for (CFIndex i = 0; i < CFArrayGetCount(array); i++)
+      if (kSQLite3StatusOK != (status = SQLite3MigrationExecuteWithContentsOfURL(connection, CFArrayGetValueAtIndex(array, i))))
+        break;
+    CFRelease(array);
+  }
+  return status;
 }

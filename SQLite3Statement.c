@@ -10,28 +10,27 @@
 
 #pragma Lifecycle
 
-// SQLite3ConnectionRef connection is retained by the statement
 inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql) {
   SQLite3StatementRef statement = CFAllocatorAllocate(allocator, sizeof(SQLite3Statement), 0);
   if (statement) {
-    statement->connection = SQLite3ConnectionRetain(connection);
-    statement->allocator = allocator ? CFRetain(allocator) : NULL;
+    statement->connection = SQLite3ConnectionRetain(connection);   // Let's retain connection
+    statement->allocator = allocator ? CFRetain(allocator) : NULL; // ...and allocator if not null
     statement->retainCount = 1;
-    
+    statement->stmt = NULL;
     __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringMake(statement->allocator, sql);
-    sqlite3_prepare(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), -1, &statement->stmt, NULL);
+    SQLite3Status status;
+    if (kSQLite3StatusOK != (status = sqlite3_prepare_v2(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), -1, &statement->stmt, NULL))) {
+      statement->stmt = NULL;
+      statement->retainCount--;
+      if (statement->allocator) {
+        CFRelease(allocator);
+        statement->allocator = NULL;
+      }
+      SQLite3ConnectionRelease(statement->connection);
+      CFAllocatorDeallocate(allocator, statement);
+      statement = NULL;
+    }
     __SQLite3UTF8StringDestroy(utf8Sql);
-//    va_list arguments;
-//    va_start(arguments, sql);
-//    CFTypeRef argument = NULL;
-//    NSInteger i = 0;
-//    while ((argument = va_arg(arguments, CFTypeRef))) {
-//      NSLog(@"will bind i = %ld, %p %p", i, (void *)argument, (void *)sql);
-//      CFShow(sql);
-//      CFShow(argument);
-//      //SQLite3StatementBindCFType(statement, i++, argument);
-//    }
-//    va_end(arguments);
   }
   return statement;
 }
@@ -47,6 +46,7 @@ inline SQLite3StatementRef SQLite3StatementRetain(SQLite3StatementRef statement)
 
 inline SQLite3StatementRef SQLite3StatementRelease(SQLite3StatementRef statement) {
   if (--statement->retainCount <= 0) {
+    //SQLite3StatementReset(statement);
     //SQLite3StatementClearBindings(statement);
     //SQLite3StatementFinalize(statement);
     SQLite3ConnectionRelease(statement->connection);
@@ -82,6 +82,7 @@ inline SQLite3Status SQLite3StatementStep(SQLite3StatementRef statement) {
 // TODO: Have a look here, something smells
 inline SQLite3Status SQLite3StatementExecute(SQLite3StatementRef statement) {
   SQLite3Status status = SQLite3StatementStep(statement);
+  SQLite3StatementReset(statement);
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
   return status;

@@ -14,6 +14,7 @@
   [super setUp];
   allocator = TestAllocatorCreate();
   connection = SQLite3ConnectionCreate(allocator, CFSTR("/Users/Mirek/my.db"), SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
+  SQLite3ConnectionSetBusyTimeout(connection, 3.0);
   STAssertTrue(connection != NULL, @"Connection should be allocated");
   STAssertFalse(SQLite3ConnectionHasError(connection), @"Connection should't have errors, but got '%s'", sqlite3_errmsg(connection->db));
 }
@@ -54,7 +55,33 @@
   }
 }
 
-- (void) testCreateUsersTable {
+- (void) testMigrations {
+  NSBundle *bundle = [NSBundle bundleForClass: [Tests class]];
+  NSString *resourcePath = [bundle resourcePath];
+  NSString *migrationsPath = [resourcePath stringByAppendingPathComponent: @"Migrations"];
+  NSURL *migrationsURL = [NSURL fileURLWithPath: migrationsPath];
+
+  SQLite3Status status = SQLite3MigrationMigrateWithDirectoryURL(connection, migrationsURL);
+  
+//  CFArrayRef array = SQlite3MigrationCreateURLsArrayWithDirectoryURL(allocator, (CFURLRef)migrationsURL);
+//  
+//  STAssertEquals((CFIndex)3, CFArrayGetCount(array), @"Incorrect number of migrations");
+//  
+//  SInt32 errorCode;
+//  CFDataRef data = NULL;
+//  if (CFURLCreateDataAndPropertiesFromResource(NULL, CFArrayGetValueAtIndex(array, 0), &data, NULL, NULL, &errorCode)) {
+//    CFStringRef sql = CFStringCreateWithBytes(NULL, CFDataGetBytePtr(data), CFDataGetLength(data), kCFStringEncodingUTF8, 0);
+//    NSLog(@"DATA: %@", sql);
+//    CFRelease(sql);
+//    CFRelease(data);
+//  } else {
+//    NSLog(@"FAIL");
+//  }
+//  
+//  CFRelease(array);
+}
+
+- (void) _testCreateUsersTable {
   NSError *error = nil;
   
   SQLite3ConnectionDropTableIfExists(connection, CFSTR("users"));
@@ -90,6 +117,7 @@
     if (kSQLite3StatusDone != SQLite3StatementStep(statement)) {
       STAssertTrue(NO, @"Insert should return done");
     }
+    SQLite3StatementReset(statement);
     SQLite3StatementClearBindings(statement);
     SQLite3StatementFinalize(statement);
     SQLite3StatementRelease(statement);
@@ -100,6 +128,7 @@
     CFRelease(propertyList);
   }
   
+  SQLite3ConnectionDropTableIfExists(connection, CFSTR("users"));
   
   [user release];
   

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		EB0C650913129A6600F18BB6 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0C650813129A6600F18BB6 /* CoreFoundation.framework */; };
 		EB0C65221312A21400F18BB6 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = EB0C651F1312A20300F18BB6 /* sqlite3.c */; };
+		EB173D8F1315627C00C173A9 /* Migrations in Resources */ = {isa = PBXBuildFile; fileRef = EB173D8E1315627C00C173A9 /* Migrations */; };
 		EB3B045C1312BE64009FDDA1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = EB3B045A1312BE64009FDDA1 /* InfoPlist.strings */; };
 		EB3B04611312BE88009FDDA1 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = EB0C651F1312A20300F18BB6 /* sqlite3.c */; };
 		EB3B04621312BE8C009FDDA1 /* SQLite3Connection.c in Sources */ = {isa = PBXBuildFile; fileRef = EBA5182113003B1000F50C8E /* SQLite3Connection.c */; };
@@ -65,6 +66,7 @@
 		EB0C651F1312A20300F18BB6 /* sqlite3.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sqlite3.c; sourceTree = "<group>"; };
 		EB0C65201312A20300F18BB6 /* sqlite3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sqlite3.h; sourceTree = "<group>"; };
 		EB0C65211312A20300F18BB6 /* sqlite3ext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sqlite3ext.h; sourceTree = "<group>"; };
+		EB173D8E1315627C00C173A9 /* Migrations */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Migrations; sourceTree = "<group>"; };
 		EB3B04501312BE64009FDDA1 /* CoreSQLite3.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CoreSQLite3.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB3B04591312BE64009FDDA1 /* CoreSQLite3-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CoreSQLite3-Info.plist"; sourceTree = "<group>"; };
 		EB3B045B1312BE64009FDDA1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -262,6 +264,7 @@
 		EBA817501303FAD900F59716 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				EB173D8E1315627C00C173A9 /* Migrations */,
 				EBA817571303FAD900F59716 /* Tests.h */,
 				EBA817591303FAD900F59716 /* Tests.m */,
 				EBC09BED1312E54C00E0361A /* TestAllocator.c */,
@@ -406,6 +409,7 @@
 			files = (
 				EBA817551303FAD900F59716 /* InfoPlist.strings in Resources */,
 				EBA817581303FAD900F59716 /* Tests.h in Resources */,
+				EB173D8F1315627C00C173A9 /* Migrations in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

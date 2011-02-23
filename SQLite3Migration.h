@@ -23,18 +23,23 @@ typedef enum {
 
 #pragma Migration utility functions
 
-SQLite3MigrationType SQLite3MigrationGetTypeWithPath              (                          CFStringRef path);
-CFStringRef          SQLite3MigrationCreateVersionStringWithPath  (CFAllocatorRef allocator, CFStringRef path);
-CFMutableArrayRef    SQlite3MigrationCreateFileArrayWithDirectory (CFAllocatorRef allocator, CFStringRef directory);
+SQLite3MigrationType SQLite3MigrationGetTypeWithPath                 (                          CFStringRef path);
+SQLite3MigrationType SQLite3MigrationGetTypeWithURL                  (                          CFURLRef    url);
+CFStringRef          SQLite3MigrationCreateVersionStringWithPath     (CFAllocatorRef allocator, CFStringRef path);
+CFStringRef          SQLite3MigrationCreateVersionStringWithURL      (CFAllocatorRef allocator, CFURLRef url);
+CFMutableArrayRef    SQlite3MigrationCreateURLsArrayWithDirectoryURL (CFAllocatorRef allocator, CFURLRef directoryURL);
 
-SQLite3Status SQLite3MigrationInsertVersion(SQLite3ConnectionRef connection, CFStringRef version);
-SQLite3Status SQLite3MigrationDeleteVersion(SQLite3ConnectionRef connection, CFStringRef version);
+SQLite3Status SQLite3MigrationCreateTableIfDoesntExist (SQLite3ConnectionRef connection);
+
+SQLite3Status SQLite3MigrationInsertVersion (SQLite3ConnectionRef connection, CFStringRef version);
+SQLite3Status SQLite3MigrationDeleteVersion (SQLite3ConnectionRef connection, CFStringRef version);
 
 #pragma Migration functionality
 
-SQLite3Status SQLite3MigrationExecute       (SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);
-SQLite3Status SQLite3MigrationExecuteUndo   (SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);
+SQLite3Status SQLite3MigrationExecuteWithContentsOfURL (SQLite3ConnectionRef connection, CFURLRef url);
+SQLite3Status SQLite3MigrationExecute                  (SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);
+SQLite3Status SQLite3MigrationExecuteUndo              (SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);
 
-SQLite3Status SQLite3MigrationWithDirectory (SQLite3ConnectionRef connection, CFStringRef path);
+SQLite3Status SQLite3MigrationMigrateWithDirectoryURL (SQLite3ConnectionRef connection, CFURLRef directoryURL);
 
 #endif

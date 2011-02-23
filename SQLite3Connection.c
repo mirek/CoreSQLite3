@@ -20,15 +20,12 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
     connection->defaultDateFormatter = CFDateFormatterCreate(NULL, NULL, kCFDateFormatterNoStyle, kCFDateFormatterNoStyle);
     CFDateFormatterSetFormat(connection->defaultDateFormatter, CFSTR("yyyy-MM-dd HH:mm:ss"));
     
-//    if (path == NULL)
-//      path = CFSTR(":memory:");
-    
     __SQLite3UTF8String utf8Path = __SQLite3UTF8StringMake(connection->allocator, path);
     int sqlite3_open_v2_result = sqlite3_open_v2(__SQLite3UTF8StringGetBuffer(utf8Path), &connection->db, flags, zVfs);
     __SQLite3UTF8StringDestroy(utf8Path);
     
-    if (sqlite3_open_v2_result == SQLITE_OK) {
-      // OK
+    if (kSQLite3StatusOK == sqlite3_open_v2_result) {
+      SQLite3ConnectionSetBusyTimeout(connection, 3.0); // Let's set default busy timeout to 3 seconds
     } else {
       if (!connection->db) // If the sqlite3 connection has not been allocated, we deallocate connection and return NULL
         connection = SQLite3ConnectionRelease(connection);
@@ -118,6 +115,18 @@ inline sqlite3 *SQLite3ConnectionGetConnection(SQLite3ConnectionRef connection) 
 }
 
 #pragma Resultset utility functions
+
+inline SQLite3Status SQLite3ConnectionExecuteWithContentsOfURL(SQLite3ConnectionRef connection, CFURLRef url) {
+  SQLite3Status status = kSQLite3StatusError;
+  SInt32 errorCode = 0;
+  CFDataRef data = NULL;
+  if (CFURLCreateDataAndPropertiesFromResource(connection->allocator, url, &data, NULL, NULL, &errorCode)) {
+    CFStringRef sql = CFStringCreateWithBytes(connection->allocator, CFDataGetBytePtr(data), CFDataGetLength(data), kCFStringEncodingUTF8, 0);
+    status = SQLite3ConnectionExecute(connection, sql);
+    CFRelease(sql);
+  }
+  return status;
+}
 
 inline SQLite3Status SQLite3ConnectionExecutev(SQLite3ConnectionRef connection, CFStringRef sql, ...) {
   va_list arguments;
@@ -252,6 +261,8 @@ inline CFDateRef SQLite3ConnectionCreateDateWithQuery(SQLite3ConnectionRef conne
     value = SQLite3StatementCreateDateWithColumn(statement, 0);
     break;
   }
+  SQLite3StatementReset(statement);
+  SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
   return value;
 }
@@ -263,6 +274,8 @@ inline CFDictionaryRef SQLite3ConnectionCreateDictionaryForAllColumnsWithQuery(S
     value = SQLite3StatementCreateDictionaryWithAllColumns(statement);
     break;
   }
+  SQLite3StatementReset(statement);
+  SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
   return value;
 }
@@ -272,6 +285,7 @@ inline CFPropertyListRef SQLite3ConnectionCreatePropertyListWithQuery(SQLite3Con
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
   if (kSQLite3StatusRow == SQLite3StatementStep(statement))
     value = SQLite3StatementCreatePropertyListWithColumn(statement, 0, options, format, error);
+  SQLite3StatementReset(statement);
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
@@ -284,6 +298,8 @@ inline SQLite3Status SQLite3ConnectionDropTable(SQLite3ConnectionRef connection,
   CFStringRef sql = CFStringCreateWithFormat(connection->allocator, 0, CFSTR("drop table %@"), name); // TODO: Excape properly
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
   SQLite3Status status = SQLite3StatementExecute(statement);
+  SQLite3StatementReset(statement);
+  SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
   CFRelease(sql);
   return status;
@@ -302,6 +318,7 @@ inline bool SQLite3ConnectionDoesTableExist(SQLite3ConnectionRef connection, CFS
   SQLite3StatementBindString(statement, 1, name);
   if (kSQLite3StatusRow == SQLite3StatementStep(statement))
     exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
+  SQLite3StatementReset(statement);
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
@@ -314,6 +331,7 @@ inline bool SQLite3ConnectionDoesViewExist(SQLite3ConnectionRef connection, CFSt
   SQLite3StatementBindString(statement, 1, name);
   if (kSQLite3StatusRow == SQLite3StatementStep(statement))
     exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
+  SQLite3StatementReset(statement);
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
@@ -327,8 +345,13 @@ inline bool SQLite3ConnectionDoesTableOrViewExist(SQLite3ConnectionRef connectio
   if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
     exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
   }
+  SQLite3StatementReset(statement);
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
   return exists;
+}
+
+inline SQLite3Status SQLite3ConnectionSetBusyTimeout(SQLite3ConnectionRef connection, CFTimeInterval ti) {
+  return sqlite3_busy_timeout(connection->db, (int)(ti * 1000));
 }
