@@ -1,87 +1,27 @@
-# CoreSQLite3 Framework
+# CoreSQLite3 Framework Reference
 
-Fast, `Core Foundation` oriented sqlite3 framework for iOS and OSX.
+## Overview
 
-## Examples
+`CoreSQLite3` Framework is fast, `Core Foundation` oriented, `sqlite3` based framework written in C.
 
-Typical usage:
+`CoreSQLite3` works on iOS and OSX platforms.
 
-    CFErrorRef error = NULL;
-
-    // As an example, let's create in-memory database
-    SQLite3ConnectionRef connection = SQLite3ConnectionCreate(CFSTR(":memory:"), 0);
-
-    // SQL queries can be executed directly on the connection
-    SQLite3ConnectionExecute(connection, CFSTR("create table users(id integer primary key, name varchar, surname varchar)"));
-    if ((error = SQLite3ConnectionCreateError(connection))) {
-      CFShow(error);
-      CFRelease(error);
-      exit(-1);
-    }
-    
-    // Simple binding
-    {
-      SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into users(name, surname) values(?, ?)"));
-      SQLite3StatementBindString(statement, CFSTR("Mirek"));
-      SQLite3StatementBindString(statement, CFSTR("Rusin"));
-      SQLite3StatementExecute(statement);
-      if ((error = SQLite3ConnectionCreateError(connection))) {
-        CFShow(error);
-        CFRelease(error);
-        exit(-1);
-      }
-      SQLite3StatementRelease(statement);
-    }
-    
-    // We can use toll-free bridging for Core Foundation types, so it's easy to use the library from Objective-C
-    {
-      NSArray values = [NSArray arrayWithObjects: @"Mirek", @"Rusin", nil];
-      SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into users(name, surname) values(?, ?)"));
-      SQLite3StatementBindArray(statement, (CFArrayRef)values);
-      SQLite3StatementExecute(statement);
-      if ((error = SQLite3ConnectionCreateError(connection))) {
-        CFShow(error);
-        CFRelease(error);
-        exit(-1);
-      }
-      SQLite3StatementRelease(statement);
-    }
-    
-    // Selecting is easy
-    {
-      SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select name, surname from users"));
-      while (SQLite3StatementStep(statement) == SQLITE_ROW) {
-        CFStringRef name = SQLite3StatementGetString(statement, 0);
-        CFStringRef surname = SQLite3StatementGetString(statement, 1);
-        NSLog(@"name: %@, surname: %@", name, surname);
-        CFRelease(name);
-        CFRelease(surname);
-      }
-      if ((error = SQLite3ConnectionCreateError(connection))) {
-        CFShow(error);
-        CFRelease(error);
-        exit(-1);
-      }
-      SQLite3StatementRelease(statement);
-    }
-    
-    // Images are supported out-of-the-box
-    {
-      
-    }
-    
-    SQLite3ConnectionRelease(connection);
+Toll-free bridging between `Core Foundation` and Objective-C allows `CoreSQLite3` framework to be used directly from Objective-C code.
 
 ## Functions by Task
 
 ### Creating Connection
 
+`SQLite3ConnectionCreate`
+
+### Closing Connection
+
+`SQLite3ConnectionClose`
+`SQLite3ConnectionRelease`
+
 ### Creating Statement
 
-Select
-Insert
-Update
-Delete
+`SQLite3StatementCreate`
 
 ### Binding
 
@@ -135,6 +75,76 @@ Pattern of schema migrations is similar to Ruby on Rails one.
     /migrations/20100209-111000-create-users.sql
     /migrations/20100209-111000.undo.sql (optional)
 
+## Examples
+
+Typical usage:
+
+    CFErrorRef error = NULL;
+
+    // As an example, let's create in-memory database
+    SQLite3ConnectionRef connection = SQLite3ConnectionCreate(CFSTR(":memory:"), 0);
+
+    // SQL queries can be executed directly on the connection
+    SQLite3ConnectionExecute(connection, CFSTR("create table users(id integer primary key, name varchar, surname varchar)"));
+    if ((error = SQLite3ConnectionCreateError(connection))) {
+      CFShow(error);
+      CFRelease(error);
+      exit(-1);
+    }
+
+    // Simple binding
+    {
+      SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into users(name, surname) values(?, ?)"));
+      SQLite3StatementBindString(statement, CFSTR("Mirek"));
+      SQLite3StatementBindString(statement, CFSTR("Rusin"));
+      SQLite3StatementExecute(statement);
+      if ((error = SQLite3ConnectionCreateError(connection))) {
+        CFShow(error);
+        CFRelease(error);
+        exit(-1);
+      }
+      SQLite3StatementRelease(statement);
+    }
+
+    // We can use toll-free bridging for Core Foundation types, so it's easy to use the library from Objective-C
+    {
+      NSArray values = [NSArray arrayWithObjects: @"Mirek", @"Rusin", nil];
+      SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into users(name, surname) values(?, ?)"));
+      SQLite3StatementBindArray(statement, (CFArrayRef)values);
+      SQLite3StatementExecute(statement);
+      if ((error = SQLite3ConnectionCreateError(connection))) {
+        CFShow(error);
+        CFRelease(error);
+        exit(-1);
+      }
+      SQLite3StatementRelease(statement);
+    }
+
+    // Selecting is easy
+    {
+      SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select name, surname from users"));
+      while (SQLite3StatementStep(statement) == SQLITE_ROW) {
+        CFStringRef name = SQLite3StatementGetString(statement, 0);
+        CFStringRef surname = SQLite3StatementGetString(statement, 1);
+        NSLog(@"name: %@, surname: %@", name, surname);
+        CFRelease(name);
+        CFRelease(surname);
+      }
+      if ((error = SQLite3ConnectionCreateError(connection))) {
+        CFShow(error);
+        CFRelease(error);
+        exit(-1);
+      }
+      SQLite3StatementRelease(statement);
+    }
+
+    // Images are supported out-of-the-box
+    {
+
+    }
+
+    SQLite3ConnectionRelease(connection);
+
 ## Sqlite3 to CoreSQLite3 Quick Function Lookup Table
 
 | Sqlite3 API                      | CoreSQLite3 API                                                              
@@ -175,7 +185,8 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `sqlite3_collation_needed`       | `-`                                                                            
 | `sqlite3_collation_needed16`     | `-`                                                                            
 | `sqlite3_column_blob`            | `-`
-| `sqlite3_column_bytes`           | `SQLite3StatementGetData`
+| `sqlite3_column_bytes`           | `SQLite3StatementCreateDataWithColumn`
+| `-`                              | `SQLite3StatementCreateDataWithColumnName`
 | `sqlite3_column_bytes16`         | `-`                                                                           
 | `sqlite3_column_count`           | `SQLite3StatementGetColumnCount`                                                                            
 | `sqlite3_column_database_name`   | `-`                                                                            
@@ -227,7 +238,7 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `-`                              | `SQLite3ConnectionHasError`                                                                            
 | `sqlite3_errmsg`                 | `SQLite3ConnectionCreateError`                                                                            
 | `sqlite3_errmsg16`               | `-`                                                                            
-| `sqlite3_exec`                   | `-`                                                                            
+| `sqlite3_exec`                   | `SQLite3ConnectionExecute`                                                                            
 | `sqlite3_extended_errcode`       | `-`                                                                            
 | `sqlite3_extended_result_codes`  | `-`                                                                            
 | `sqlite3_file_control`           | `-`                                                                            
@@ -272,7 +283,7 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `sqlite3_randomness`             | `-`                                                                            
 | `sqlite3_realloc`                | `-`                                                                            
 | `sqlite3_release_memory`         | `-`                                                                            
-| `sqlite3_reset`                  | `-`                                                                            
+| `sqlite3_reset`                  | `SQLite3StatementReset`                                                                            
 | `sqlite3_reset_auto_extension`   | `-`                                                                            
 | `sqlite3_result_blob`            | `-`                                                                            
 | `sqlite3_result_double`          | `-`                                                                            
@@ -300,7 +311,7 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `sqlite3_sourceid`               | `-`                                                                            
 | `sqlite3_sql`                    | `-`                                                                            
 | `sqlite3_status`                 | `-`                                                                            
-| `sqlite3_step`                   | `-`                                                                            
+| `sqlite3_step`                   | `SQLite3StatementStep`                                                                            
 | `sqlite3_stmt_readonly`          | `-`                                                                            
 | `sqlite3_stmt_status`            | `-`                                                                            
 | `sqlite3_strnicmp`               | `-`                                                                            

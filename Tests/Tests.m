@@ -25,6 +25,29 @@
   [super tearDown];
 }
 
+- (void) testMigrationVersionStrings {
+  {
+    CFStringRef version = SQLite3MigrationCreateVersionStringWithPath(NULL, CFSTR("/Users/Mirek/Project/migrations/2010-02-21_11-56-00.test.sql"));
+    STAssertEqualObjects(@"2010-02-21_11-56-00", (id)version, @"Version should match");
+    CFRelease(version);
+  }
+  {
+    CFStringRef version = SQLite3MigrationCreateVersionStringWithPath(NULL, CFSTR("2010-02-21_11-56-00.test.sql"));
+    STAssertEqualObjects(@"2010-02-21_11-56-00", (id)version, @"Version should match");
+    CFRelease(version);
+  }
+  {
+    CFStringRef version = SQLite3MigrationCreateVersionStringWithPath(NULL, CFSTR("2010-02-21_11-56-00.sql"));
+    STAssertEqualObjects(@"2010-02-21_11-56-00", (id)version, @"Version should match");
+    CFRelease(version);
+  }
+  {
+    CFStringRef version = SQLite3MigrationCreateVersionStringWithPath(NULL, CFSTR("2010-02-21_11-56-00"));
+    STAssertEqualObjects(@"2010-02-21_11-56-00", (id)version, @"Version should match");
+    CFRelease(version);
+  }
+}
+
 - (void) testCreateUsersTable {
   NSError *error = nil;
   

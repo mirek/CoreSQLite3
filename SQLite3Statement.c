@@ -37,11 +37,7 @@ inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQL
 }
 
 inline SQLite3StatementRef SQLite3StatementCreate(SQLite3ConnectionRef connection, CFStringRef sql) {
-//	va_list arguments;
-//	va_start(arguments, sql);
-  SQLite3StatementRef value = _SQLite3StatementCreate(NULL, connection, sql);
-//	va_end(arguments);
-  return value;
+  return _SQLite3StatementCreate(connection->allocator, connection, sql);
 }
 
 inline SQLite3StatementRef SQLite3StatementRetain(SQLite3StatementRef statement) {

@@ -23,12 +23,18 @@ typedef enum {
 
 #pragma Migration utility functions
 
-SQLite3MigrationType SQLite3MigrationGetTypeWithPath(CFStringRef path);
-CFStringRef SQLite3MigrationCreateVersionStringWithPath(CFAllocatorRef allocator, CFStringRef path);
+SQLite3MigrationType SQLite3MigrationGetTypeWithPath              (                          CFStringRef path);
+CFStringRef          SQLite3MigrationCreateVersionStringWithPath  (CFAllocatorRef allocator, CFStringRef path);
+CFMutableArrayRef    SQlite3MigrationCreateFileArrayWithDirectory (CFAllocatorRef allocator, CFStringRef directory);
+
+SQLite3Status SQLite3MigrationInsertVersion(SQLite3ConnectionRef connection, CFStringRef version);
+SQLite3Status SQLite3MigrationDeleteVersion(SQLite3ConnectionRef connection, CFStringRef version);
 
 #pragma Migration functionality
 
-bool SQLite3MigrationExecute(SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);
-bool SQLite3MigrationWithDirectoryPath(SQLite3ConnectionRef connection, CFStringRef path);
+SQLite3Status SQLite3MigrationExecute       (SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);
+SQLite3Status SQLite3MigrationExecuteUndo   (SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);
+
+SQLite3Status SQLite3MigrationWithDirectory (SQLite3ConnectionRef connection, CFStringRef path);
 
 #endif
