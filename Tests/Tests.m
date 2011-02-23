@@ -34,7 +34,7 @@
   STAssertNil(error = (NSError *)SQLite3ConnectionCreateError(connection), @"Connection should't have error %@", error);
   
   NSDictionary *user = [[NSDictionary alloc] initWithObjectsAndKeys:
-                        [NSNumber numberWithInt: 1],     @"id",
+                        [NSNumber numberWithInt: 1], @"id",
                         @"mirek", @"username",
                         @"Mirek", @"name",
                         @"Rusin", @"surname",

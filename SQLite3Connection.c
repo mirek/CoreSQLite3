@@ -20,6 +20,9 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
     connection->defaultDateFormatter = CFDateFormatterCreate(NULL, NULL, kCFDateFormatterNoStyle, kCFDateFormatterNoStyle);
     CFDateFormatterSetFormat(connection->defaultDateFormatter, CFSTR("yyyy-MM-dd HH:mm:ss"));
     
+//    if (path == NULL)
+//      path = CFSTR(":memory:");
+    
     __SQLite3UTF8String utf8Path = __SQLite3UTF8StringMake(connection->allocator, path);
     int sqlite3_open_v2_result = sqlite3_open_v2(__SQLite3UTF8StringGetBuffer(utf8Path), &connection->db, flags, zVfs);
     __SQLite3UTF8StringDestroy(utf8Path);
@@ -28,7 +31,7 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
       // OK
     } else {
       if (!connection->db) // If the sqlite3 connection has not been allocated, we deallocate connection and return NULL
-        SQLite3ConnectionRelease(connection);
+        connection = SQLite3ConnectionRelease(connection);
     }
   }
   return connection;
@@ -282,6 +285,7 @@ inline SQLite3Status SQLite3ConnectionDropTable(SQLite3ConnectionRef connection,
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
   SQLite3Status status = SQLite3StatementExecute(statement);
   SQLite3StatementRelease(statement);
+  CFRelease(sql);
   return status;
 }
 
@@ -296,11 +300,11 @@ inline bool SQLite3ConnectionDoesTableExist(SQLite3ConnectionRef connection, CFS
   bool exists = 0;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select count(*) from sqlite_master where type = 'table' and name = ?"));
   SQLite3StatementBindString(statement, 1, name);
-  if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
+  if (kSQLite3StatusRow == SQLite3StatementStep(statement))
     exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
-  }
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
+  SQLite3StatementRelease(statement);
   return exists;
 }
 
@@ -308,11 +312,11 @@ inline bool SQLite3ConnectionDoesViewExist(SQLite3ConnectionRef connection, CFSt
   bool exists = 0;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select count(*) from sqlite_master where type = 'view' and name = ?"));
   SQLite3StatementBindString(statement, 1, name);
-  if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
+  if (kSQLite3StatusRow == SQLite3StatementStep(statement))
     exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
-  }
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
+  SQLite3StatementRelease(statement);
   return exists;
 }
 
@@ -325,5 +329,6 @@ inline bool SQLite3ConnectionDoesTableOrViewExist(SQLite3ConnectionRef connectio
   }
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
+  SQLite3StatementRelease(statement);
   return exists;
 }
