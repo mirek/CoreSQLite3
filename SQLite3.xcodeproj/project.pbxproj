@@ -41,6 +41,7 @@
 		EBB1ADCA1312A6C5006476A7 /* SQLite3ConnectionPool.h in Headers */ = {isa = PBXBuildFile; fileRef = EBA5182213003B1000F50C8E /* SQLite3ConnectionPool.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		EBB1ADCB1312A6C8006476A7 /* SQLite3Statement.h in Headers */ = {isa = PBXBuildFile; fileRef = EBA5182413003B1000F50C8E /* SQLite3Statement.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		EBB1ADCC1312A6CE006476A7 /* SQLite3Migration.h in Headers */ = {isa = PBXBuildFile; fileRef = EBA8173E1301B50700F59716 /* SQLite3Migration.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		EBC09BEF1312E54C00E0361A /* TestAllocator.c in Sources */ = {isa = PBXBuildFile; fileRef = EBC09BED1312E54C00E0361A /* TestAllocator.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,7 +58,7 @@
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* SQLite3_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLite3_Prefix.pch; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		EB0C64F413129A2300F18BB6 /* libCoreSQLite3.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCoreSQLite3.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		EB0C64F413129A2300F18BB6 /* libCoreSQLite3_iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCoreSQLite3_iOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB0C64F813129A2300F18BB6 /* CoreSQLite3-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CoreSQLite3-Prefix.pch"; sourceTree = "<group>"; };
 		EB0C650813129A6600F18BB6 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.2.sdk/System/Library/Frameworks/CoreFoundation.framework; sourceTree = DEVELOPER_DIR; };
 		EB0C651E1312A20300F18BB6 /* shell.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = shell.c; sourceTree = "<group>"; };
@@ -90,6 +91,8 @@
 		EBA817571303FAD900F59716 /* Tests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Tests.h; sourceTree = "<group>"; };
 		EBA817591303FAD900F59716 /* Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Tests.m; sourceTree = "<group>"; };
 		EBA8176D130422AB00F59716 /* Readme.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = Readme.md; sourceTree = "<group>"; };
+		EBC09BED1312E54C00E0361A /* TestAllocator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TestAllocator.c; sourceTree = "<group>"; };
+		EBC09BEE1312E54C00E0361A /* TestAllocator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestAllocator.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -125,7 +128,7 @@
 			isa = PBXGroup;
 			children = (
 				EBA817491303FAD900F59716 /* Tests.octest */,
-				EB0C64F413129A2300F18BB6 /* libCoreSQLite3.a */,
+				EB0C64F413129A2300F18BB6 /* libCoreSQLite3_iOS.a */,
 				EB3B04501312BE64009FDDA1 /* CoreSQLite3.framework */,
 			);
 			name = Products;
@@ -261,6 +264,8 @@
 			children = (
 				EBA817571303FAD900F59716 /* Tests.h */,
 				EBA817591303FAD900F59716 /* Tests.m */,
+				EBC09BED1312E54C00E0361A /* TestAllocator.c */,
+				EBC09BEE1312E54C00E0361A /* TestAllocator.h */,
 				EBA817511303FAD900F59716 /* Supporting Files */,
 			);
 			path = Tests;
@@ -318,7 +323,7 @@
 			);
 			name = CoreSQLite3_iOS;
 			productName = CoreSQLite3;
-			productReference = EB0C64F413129A2300F18BB6 /* libCoreSQLite3.a */;
+			productReference = EB0C64F413129A2300F18BB6 /* libCoreSQLite3_iOS.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		EB3B044F1312BE64009FDDA1 /* CoreSQLite3 */ = {
@@ -460,6 +465,7 @@
 				EBA8175A1303FAD900F59716 /* Tests.m in Sources */,
 				EB3B04831312C616009FDDA1 /* CoreSQLite3UTF8String.c in Sources */,
 				EB3B048C1312CD88009FDDA1 /* sqlite3.c in Sources */,
+				EBC09BEF1312E54C00E0361A /* TestAllocator.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -693,6 +699,7 @@
 				EB3B04601312BE64009FDDA1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		EBA8175B1303FAD900F59716 /* Build configuration list for PBXNativeTarget "Tests" */ = {
 			isa = XCConfigurationList;
