@@ -10,8 +10,7 @@
 
 typedef struct TestAllocatorInfo {
   CFAllocatorRef allocator;
-  CFIndex retainsCount;
-  CFIndex releasesCount;
+  CFIndex retainCount;
   CFIndex allocationsCount;
   CFIndex reallocationsCount;
   CFIndex deallocationsCount;
@@ -20,7 +19,6 @@ typedef struct TestAllocatorInfo {
 typedef TestAllocatorInfo *TestAllocatorInfoRef;
 
 CFAllocatorRef TestAllocatorCreate                ();
-void           TestAllocatorRelease               (CFAllocatorRef allocator);
 
 const void    *TestAllocatorRetainCall            (const void *info);
 void           TestAllocatorReleaseCall           (const void *info);
@@ -29,3 +27,7 @@ void          *TestAllocatorAllocateCall          (CFIndex allocSize, CFOptionFl
 void          *TestAllocatorReallocateCall        (void *ptr, CFIndex newsize, CFOptionFlags hint, void *info);
 void           TestAllocatorDeallocateCall        (void *ptr, void *info);
 CFIndex        TestAllocatorPreferedSizeCall      (CFIndex size, CFOptionFlags hint, void *info);
+
+CFIndex        TestAllocatorGetAllocationsCount   (CFAllocatorRef allocator);
+CFIndex        TestAllocatorGetDeallocationsCount (CFAllocatorRef allocator);
+

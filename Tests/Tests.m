@@ -19,9 +19,15 @@
 }
 
 - (void) tearDown {
-  //CFRelease(allocator);
+  
   SQLite3ConnectionRelease(connection);
-  //STAssertTrue(NULL == , @"Connection should be released");
+
+  STAssertTrue(TestAllocatorGetAllocationsCount(allocator) >= 0, @"Allocations count should be more than 0");
+  STAssertTrue(TestAllocatorGetDeallocationsCount(allocator) >= 0, @"Deallocations count should be more than 0");
+  STAssertEquals(TestAllocatorGetAllocationsCount(allocator), TestAllocatorGetDeallocationsCount(allocator), @"Allocations/deallocations mismatch");
+  
+  CFRelease(allocator);
+  
   [super tearDown];
 }
 
@@ -80,20 +86,18 @@
                                  @"English", @"preferred",
                                  nil];
     SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into users(data) values(?)"));
-//    NSLog(@"%@", SQLite3ConnectionCreateError(connection));
-//    SQLite3StatementBindInt32(statement, 2, 1);
-//    NSLog(@"%@", SQLite3ConnectionCreateError(connection));
     SQLite3StatementBindPropertyList(statement, 1, preferences, kCFPropertyListXMLFormat_v1_0);
-//    NSLog(@"%@", SQLite3ConnectionCreateError(connection));
-    for (int i = 0; SQLite3StatementStep(statement) == SQLITE_OK; i++) {
-//      NSLog(@"i %@", SQLite3ConnectionCreateError(connection));
+    if (kSQLite3StatusDone != SQLite3StatementStep(statement)) {
+      STAssertTrue(NO, @"Insert should return done");
     }
-//    NSLog(@"%@", SQLite3ConnectionCreateError(connection));
-//    SQLite3StatementExecute(statement);
+    SQLite3StatementClearBindings(statement);
+    SQLite3StatementFinalize(statement);
+    SQLite3StatementRelease(statement);
     
     STAssertEquals(1, SQLite3ConnectionGetInt32WithQuery(connection, CFSTR("select count(*) from users where data is not null")), @"Should be one user with data");
-    
-    NSLog(@"result is: %@", SQLite3ConnectionCreatePropertyListWithQuery(connection, CFSTR("select data from users where data is not null"), kCFPropertyListImmutable, NULL, NULL));
+    CFPropertyListRef propertyList = SQLite3ConnectionCreatePropertyListWithQuery(connection, CFSTR("select data from users where data is not null"), kCFPropertyListImmutable, NULL, NULL);
+    STAssertNotNil(propertyList, @"Property list shouldn't be nil");
+    CFRelease(propertyList);
   }
   
   

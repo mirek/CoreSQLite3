@@ -9,14 +9,13 @@
 #include "TestAllocator.h"
 
 CFAllocatorRef TestAllocatorCreate() {
-  TestAllocatorInfoRef testAllocatorInfo = malloc(sizeof(TestAllocatorInfo));
-  testAllocatorInfo->retainsCount = 0;
-  testAllocatorInfo->releasesCount = 0;
+  TestAllocatorInfoRef testAllocatorInfo = CFAllocatorAllocate(NULL, sizeof(TestAllocatorInfo), 0);
+  testAllocatorInfo->retainCount = 1;
   testAllocatorInfo->allocationsCount = 0;
   testAllocatorInfo->reallocationsCount = 0;
   testAllocatorInfo->deallocationsCount = 0;
   
-  CFAllocatorContext *context = (CFAllocatorContext *)malloc(sizeof(CFAllocatorContext));
+  CFAllocatorContext *context = (CFAllocatorContext *)CFAllocatorAllocate(NULL, sizeof(CFAllocatorContext), 0);
 	context->info = testAllocatorInfo;
 	context->version = 0;
 	context->retain = TestAllocatorRetainCall;
@@ -33,49 +32,53 @@ CFAllocatorRef TestAllocatorCreate() {
 	return allocator;
 }
 
-void TestAllocatorRelease(CFAllocatorRef allocator) {
-  CFAllocatorContext *context = NULL;
-  CFAllocatorGetContext(allocator, context);
-  free(context->info);
-  free(context);
-  CFRelease(allocator);
-}
-
 const void *TestAllocatorRetainCall(const void *info) {
-  printf("* [retain]\n");
-	((TestAllocatorInfoRef)info)->retainsCount++;
+	((TestAllocatorInfoRef)info)->retainCount++;
 	return info;
 }
 
 void TestAllocatorReleaseCall(const void *info) {
-  printf("* [release]\n");
-	((TestAllocatorInfoRef)info)->releasesCount++;
+	if (0 == --((TestAllocatorInfoRef)info)->retainCount) {
+    CFAllocatorDeallocate(NULL, (void *)info);
+  }
 }
 
 CFStringRef TestAllocatorCreateDescriptionCall(const void *info) {
-  return CFStringCreateWithFormat(NULL, NULL, CFSTR("<TestAllocator %i retains, %i releases, %i allocations, %i reallocations, %i deallocations>"),
-                                  ((TestAllocatorInfoRef)info)->retainsCount,
-                                  ((TestAllocatorInfoRef)info)->releasesCount,
+  return CFStringCreateWithFormat(NULL, NULL, CFSTR("<TestAllocator %i retain count, %i allocations, %i deallocations, %i reallocations, >"),
+                                  ((TestAllocatorInfoRef)info)->retainCount,
                                   ((TestAllocatorInfoRef)info)->allocationsCount,
-                                  ((TestAllocatorInfoRef)info)->reallocationsCount,
-                                  ((TestAllocatorInfoRef)info)->deallocationsCount);
+                                  ((TestAllocatorInfoRef)info)->deallocationsCount,
+                                  ((TestAllocatorInfoRef)info)->reallocationsCount);
 }
 
 void *TestAllocatorAllocateCall(CFIndex allocSize, CFOptionFlags hint, void *info) {
-  printf("* [%ld/%ld alloc, %ld bytes]\n", ++((TestAllocatorInfoRef)info)->allocationsCount, ((TestAllocatorInfoRef)info)->deallocationsCount, allocSize);
   return CFAllocatorAllocate(NULL, allocSize, hint);
 }
 
 void *TestAllocatorReallocateCall(void *ptr, CFIndex newsize, CFOptionFlags hint, void *info) {
-  printf("* [%ld realloc, %ld bytes]\n", ++((TestAllocatorInfoRef)info)->reallocationsCount, newsize);
   return CFAllocatorReallocate(NULL, ptr, newsize, hint);
 }
 
 void TestAllocatorDeallocateCall(void *ptr, void *info) {
-  printf("* [%ld/%ld dealloc]\n", ((TestAllocatorInfoRef)info)->allocationsCount, ++((TestAllocatorInfoRef)info)->deallocationsCount);
   CFAllocatorDeallocate(NULL, ptr);
 }
 
 CFIndex TestAllocatorPreferedSizeCall (CFIndex size, CFOptionFlags hint, void *info) {
   return CFAllocatorGetPreferredSizeForSize(NULL, size, hint);
+}
+
+CFIndex TestAllocatorGetAllocationsCount(CFAllocatorRef allocator) {
+  CFIndex allocationsCount = -1;
+  CFAllocatorContext context;
+  CFAllocatorGetContext(allocator, &context);
+  allocationsCount = ((TestAllocatorInfoRef)context.info)->allocationsCount;
+  return allocationsCount;
+}
+
+CFIndex TestAllocatorGetDeallocationsCount(CFAllocatorRef allocator) {
+  CFIndex deallocationsCount = -1;
+  CFAllocatorContext context;
+  CFAllocatorGetContext(allocator, &context);
+  deallocationsCount = ((TestAllocatorInfoRef)context.info)->deallocationsCount;
+  return deallocationsCount;
 }
