@@ -78,9 +78,53 @@ Typical usage:
 
 ### Creating Statement
 
+Select
+Insert
+Update
+Delete
+
 ### Binding
 
-### Migrating Schema
+Additional binding functions:
+
+#### Binding arrays and dictionaries
+
+SQLite3 supports the following format for parameter bindings:
+
+* `?` or `?1` - index based bindings
+* `:name`, `@name`, `$name` - name based bindings
+
+Example queries:
+
+* `select * from users where username = ? and password = ?`
+* `select * from users where username = ?1 and password = ?2 and (?1 <> ?2)`
+* `select * from users where username = :username and password = :password`
+
+#### Binding arrays of arrays and arrays of dictionaries
+
+#### Binding images
+
+#### Serializing values
+
+SQLite3 supports automatic property list serialisation:
+
+    NSDictionary *preferences = [NSDictionary dictionaryWithObjectsAndKeys:
+                                 [NSArray arrayWithObjects: @"English", @"German"], @"languages",
+                                 @"English", @"preferred",
+                                 nil];
+
+    SQLite3StatementRef statement = SQLite3StatementCreate(connection, @"update users set data = :preferences where id = :id");
+    SQLite3StatementBindIntegerWithName(statement, @"id", 1);
+    SQLite3StatementBindPropertyList(statement, preferences);
+    SQlite3StatementExecute(statement);
+
+To retrieve serialised object graph back you can use `SQLite3StatementCreatePropertyListWithColumn` or connection's function:
+
+    id preferences = SQLite3ConnectionCreatePropertyListWithQuery(connection, @"select data from users where id = 1");
+
+### Backups
+
+### Schema Migrations
 
 Schema migration pattern has been included as an extra functionality built on top of the core functions.
 
@@ -90,8 +134,6 @@ Pattern of schema migrations is similar to Ruby on Rails one.
     /migrations/20100209-111000.undo.sql (optional)
     /migrations/20100209-111000-create-users.sql
     /migrations/20100209-111000.undo.sql (optional)
-
-### Working with Images
 
 ## Sqlite3 to CoreSQLite3 Quick Function Lookup Table
 
@@ -110,13 +152,15 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `sqlite3_bind_int`               | `SQLite3StatementBindInt32`   
 | `sqlite3_bind_int64`             | `SQLite3StatementBindInt64`  
 | `sqlite3_bind_null`              | `SQLite3StatementBindNULL`       
-| `sqlite3_bind_parameter_count`   | `SQLite3StatementBindCount`                                                                            
-| `sqlite3_bind_parameter_index`   | `SQLite3StatementBindIndex`                                                                            
-| `sqlite3_bind_parameter_name`    | `SQLite3StatementBindName`                                                                            
+| `sqlite3_bind_parameter_count`   | `SQLite3StatementGetBindParameterCount`                                                                            
+| `sqlite3_bind_parameter_index`   | `SQLite3StatementGetBindParameterIndex`                                                                            
+| `sqlite3_bind_parameter_name`    | `SQLite3StatementCreateBindNameStringWithIndex`                                                                            
 | `sqlite3_bind_text`              | `SQLite3StatementBindString`
 | `sqlite3_bind_text16`            | `-`                                                                            
 | `sqlite3_bind_value`             | `-`                                                                            
-| `sqlite3_bind_zeroblob`          | `-`                                                                            
+| `sqlite3_bind_zeroblob`          | `-`
+| `-`                              | `SQLite3StatementBindWithDictionary`
+| `-`                              | `SQLite3StatementBindWithArray`
 | `sqlite3_blob_bytes`             | `-`                                                                            
 | `sqlite3_blob_close`             | `-`                                                                            
 | `sqlite3_blob_open`              | `-`                                                                            
@@ -144,7 +188,7 @@ Pattern of schema migrations is similar to Ruby on Rails one.
 | `-`                              | `SQLite3StatementGetInt32WithColumnName`
 | `sqlite3_column_int64`           | `SQLite3StatementGetInt64WithColumn`                                                                            
 | `-`                              | `SQLite3StatementGetInt64WithColumnName`
-| `sqlite3_column_name`            | `SQLite3StatementColumnNameCreateString`
+| `sqlite3_column_name`            | `SQLite3StatementCreateColumnNameString`
 | `-`                              | `SQLite3StatementGetColumnIndexWithName`
 | `sqlite3_column_name16`          | `-`                                                                            
 | `sqlite3_column_origin_name`     | `-`                                                                            
