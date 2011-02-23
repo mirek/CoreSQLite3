@@ -34,27 +34,27 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
   return connection;
 }
 
-inline SQLite3ConnectionRef SQLite3ConnectionCreate(CFStringRef path, int flags, const char *zVfs) {
-  return _SQLite3ConnectionCreate(NULL, path, flags, zVfs);
+inline SQLite3ConnectionRef SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, int flags, const char *zVfs) {
+  return _SQLite3ConnectionCreate(allocator, path, flags, zVfs);
 }
 
 // TODO: Open in read-only mode
 // Pass bundle = NULL to use the main bundle
-void SQLite3OpenResource(CFBundleRef bundle, CFStringRef resourceName, CFStringRef resourceType, CFStringRef subDirName, sqlite3 **db) {
-  if (bundle == NULL)
-    bundle = CFBundleGetMainBundle();
-  CFURLRef url = CFBundleCopyResourceURL(bundle, resourceName, resourceType, subDirName);
-  if (url) {
-    CFShow(url);
-    if (sqlite3_open_v2(CFStringGetCStringPtr(CFURLGetString(url), kCFStringEncodingUTF8), db, SQLITE_OPEN_READONLY, NULL)) {
-      printf("ERROR %s\n", (const unsigned char *)sqlite3_errmsg(*db));
-    }
-    CFRelease(url);
-  }
+void SQLite3OpenResource(CFAllocatorRef allocator, CFBundleRef bundle, CFStringRef resourceName, CFStringRef resourceType, CFStringRef subDirName, sqlite3 **db) {
+//  if (bundle == NULL)
+//    bundle = CFBundleGetMainBundle();
+//  CFURLRef url = CFBundleCopyResourceURL(bundle, resourceName, resourceType, subDirName);
+//  if (url) {
+//    CFShow(url);
+//    if (sqlite3_open_v2(CFStringGetCStringPtr(CFURLGetString(url), kCFStringEncodingUTF8), db, SQLITE_OPEN_READONLY, NULL)) {
+//      printf("ERROR %s\n", (const unsigned char *)sqlite3_errmsg(*db));
+//    }
+//    CFRelease(url);
+//  }
 }
 
-inline int SQLite3ConnectionClose(SQLite3ConnectionRef connection) {
-  return connection ? sqlite3_close(connection->db) : SQLITE_OK;
+inline SQLite3Status SQLite3ConnectionClose(SQLite3ConnectionRef connection) {
+  return connection ? sqlite3_close(connection->db) : kSQLite3StatusOK;
 }
 
 inline SQLite3ConnectionRef SQLite3ConnectionRelease(SQLite3ConnectionRef connection) {
@@ -116,33 +116,33 @@ inline sqlite3 *SQLite3ConnectionGetConnection(SQLite3ConnectionRef connection) 
 
 #pragma Resultset utility functions
 
-inline int SQLite3ConnectionExecutev(SQLite3ConnectionRef connection, CFStringRef sql, ...) {
+inline SQLite3Status SQLite3ConnectionExecutev(SQLite3ConnectionRef connection, CFStringRef sql, ...) {
   va_list arguments;
   va_start(arguments, sql);
   CFStringRef sqlv = CFStringCreateWithFormatAndArguments(connection->allocator, NULL, sql, arguments);
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sqlv);
   CFRelease(sqlv);
   va_end(arguments);
-  int code = SQLite3StatementExecute(statement);
+  SQLite3Status status = SQLite3StatementExecute(statement);
   SQLite3StatementRelease(statement);
-  return code;
+  return status;
 }
 
-inline int SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef sql) {
-  int code = SQLITE_ERROR;
+inline SQLite3Status SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef sql) {
+  SQLite3Status status = kSQLite3StatusError;
   if (sql) {
     __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringMake(connection->allocator, sql);
-    code = sqlite3_exec(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), NULL, NULL, NULL);
+    status = sqlite3_exec(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), NULL, NULL, NULL);
     __SQLite3UTF8StringDestroy(utf8Sql);
 //    SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
 //    code = SQLite3StatementExecute(statement);
 //    SQLite3StatementRelease(statement);
   }
-  return code;
+  return status;
 }
 
 // Executes UTF-8 sql file.
-inline int SQLite3ConnectionExecuteWithContentsOfFileAtPath(SQLite3ConnectionRef connection, CFStringRef path) {
+inline SQLite3Status SQLite3ConnectionExecuteWithContentsOfFileAtPath(SQLite3ConnectionRef connection, CFStringRef path) {
   // TODO: Remove Objective-C
   
 //  __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringCreate(connection->allocator, sql);
@@ -154,7 +154,23 @@ inline int SQLite3ConnectionExecuteWithContentsOfFileAtPath(SQLite3ConnectionRef
 //  int result = SQLite3ConnectionExecute(connection, sql);
 //  CFRelease(sql);
 //  return result;
-  return -1;
+  return kSQLite3StatusError;
+}
+
+inline SQLite3Status SQLite3ConnectionExecuteWithArrayBindings(SQLite3ConnectionRef connection, CFStringRef sql, CFArrayRef values) {
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+  SQLite3StatementBindArray(statement, values);
+  SQLite3Status status = SQLite3StatementExecute(statement);
+  SQLite3StatementRelease(statement);
+  return status;
+}
+
+inline SQLite3Status SQLite3ConnectionExecuteWithDictionaryBindings(SQLite3ConnectionRef connection, CFStringRef sql, CFDictionaryRef keysValues) {
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+  SQLite3StatementBindDictionary(statement, keysValues);
+  SQLite3Status status = SQLite3StatementExecute(statement);
+  SQLite3StatementRelease(statement);
+  return status;
 }
 
 inline int32_t SQLite3ConnectionGetInt32WithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
@@ -248,17 +264,66 @@ inline CFDictionaryRef SQLite3ConnectionCreateDictionaryForAllColumnsWithQuery(S
   return value;
 }
 
-bool SQLite3ConnectionDoesTableExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
-//  CFStringRef sql = CFStringCreateWithFormat(connection->allocator, CFSTR(""), )
-//  BOOL value = SQLite3ConnectionGetBOOLWithQuery(connection, );
-//  return value;
-  return 0;
+inline CFPropertyListRef SQLite3ConnectionCreatePropertyListWithQuery(SQLite3ConnectionRef connection, CFStringRef sql, CFOptionFlags options, CFPropertyListFormat *format, CFErrorRef *error) {
+  CFPropertyListRef value = NULL;
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+  if (kSQLite3StatusRow == SQLite3StatementStep(statement))
+    value = SQLite3StatementCreatePropertyListWithColumn(statement, 0, options, format, error);
+  SQLite3StatementClearBindings(statement);
+  SQLite3StatementFinalize(statement);
+  SQLite3StatementRelease(statement);
+  return value;
 }
 
-bool SQLite3ConnectionDoesViewExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
-  return 0;
+#pragma Utility functions
+
+inline SQLite3Status SQLite3ConnectionDropTable(SQLite3ConnectionRef connection, CFStringRef name) {
+  CFStringRef sql = CFStringCreateWithFormat(connection->allocator, 0, CFSTR("drop table %@"), name); // TODO: Excape properly
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+  SQLite3Status status = SQLite3StatementExecute(statement);
+  SQLite3StatementRelease(statement);
+  return status;
 }
 
-bool SQLite3ConnectionDoesTableOrViewExistWithName(SQLite3ConnectionRef connection, CFStringRef name) {
-  return 0;
+inline SQLite3Status SQLite3ConnectionDropTableIfExists(SQLite3ConnectionRef connection, CFStringRef name) {
+  SQLite3Status status = kSQLite3StatusOK;
+  if (SQLite3ConnectionDoesTableExist(connection, name))
+    status = SQLite3ConnectionDropTable(connection, name);
+  return status;
+}
+
+inline bool SQLite3ConnectionDoesTableExist(SQLite3ConnectionRef connection, CFStringRef name) {
+  bool exists = 0;
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select count(*) from sqlite_master where type = 'table' and name = ?"));
+  SQLite3StatementBindString(statement, 1, name);
+  if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
+    exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
+  }
+  SQLite3StatementClearBindings(statement);
+  SQLite3StatementFinalize(statement);
+  return exists;
+}
+
+inline bool SQLite3ConnectionDoesViewExist(SQLite3ConnectionRef connection, CFStringRef name) {
+  bool exists = 0;
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select count(*) from sqlite_master where type = 'view' and name = ?"));
+  SQLite3StatementBindString(statement, 1, name);
+  if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
+    exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
+  }
+  SQLite3StatementClearBindings(statement);
+  SQLite3StatementFinalize(statement);
+  return exists;
+}
+
+inline bool SQLite3ConnectionDoesTableOrViewExist(SQLite3ConnectionRef connection, CFStringRef name) {
+  bool exists = 0;
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select count(*) from sqlite_master where (type = 'table' or type = 'view') and name = ?"));
+  SQLite3StatementBindString(statement, 1, name);
+  if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
+    exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
+  }
+  SQLite3StatementClearBindings(statement);
+  SQLite3StatementFinalize(statement);
+  return exists;
 }
