@@ -119,7 +119,7 @@ CFArrayRef SQLite3MigrationCreateVersionsArray(SQLite3ConnectionRef connection) 
 // Check if the migration with provided version has been already performed.
 bool SQLite3MigrationDidMigratedVersion(SQLite3ConnectionRef connection, CFStringRef version) {
   bool didMigrated = 0;
-  SQLite3Status status = SQLite3MigrationCreateTableIfDoesntExist(connection);
+  SQLite3MigrationCreateTableIfDoesntExist(connection);
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select exists(select * from schema_migrations where version = ?);"));
   SQLite3StatementBindString(statement, 1, version);
   if (kSQLite3StatusRow == SQLite3StatementStep(statement))

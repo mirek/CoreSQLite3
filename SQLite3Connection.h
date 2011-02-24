@@ -32,7 +32,6 @@ SQLite3Status     SQLite3ConnectionExecuteWithContentsOfURL               (SQLit
 
 SQLite3Status     SQLite3ConnectionExecute                                (SQLite3ConnectionRef connection, CFStringRef sql);
 SQLite3Status     SQLite3ConnectionExecutev                               (SQLite3ConnectionRef connection, CFStringRef sql, ...) CF_FORMAT_FUNCTION(2, 3);
-SQLite3Status     SQLite3ConnectionExecuteWithContentsOfFileAtPath        (SQLite3ConnectionRef connection, CFStringRef path);
 SQLite3Status     SQLite3ConnectionExecuteWithArrayBindings               (SQLite3ConnectionRef connection, CFStringRef sql, CFArrayRef values);
 SQLite3Status     SQLite3ConnectionExecuteWithDictionaryBindings          (SQLite3ConnectionRef connection, CFStringRef sql, CFDictionaryRef keysValues);
 

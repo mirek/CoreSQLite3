@@ -16,16 +16,16 @@ const char *_SQLite3CreateValuesPlaceholderCString(CFAllocatorRef allocator, CFI
 
 SQLite3StatementRef _SQLite3StatementCreate        (CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql);
 SQLite3StatementRef  SQLite3StatementCreate        (SQLite3ConnectionRef connection, CFStringRef sql);
-SQLite3StatementRef  SQLite3StatementRetain        (SQLite3StatementRef  statement);
-SQLite3StatementRef  SQLite3StatementRelease       (SQLite3StatementRef  statement);
-SQLite3Status        SQLite3StatementFinalize      (SQLite3StatementRef  statement);
-SQLite3Status        SQLite3StatementReset         (SQLite3StatementRef  statement);
-SQLite3Status        SQLite3StatementClearBindings (SQLite3StatementRef  statement);
+SQLite3StatementRef  SQLite3StatementRetain        (SQLite3StatementRef statement);
+SQLite3StatementRef  SQLite3StatementRelease       (SQLite3StatementRef statement);
+SQLite3Status        SQLite3StatementFinalize      (SQLite3StatementRef statement);
+SQLite3Status        SQLite3StatementReset         (SQLite3StatementRef statement);
+SQLite3Status        SQLite3StatementClearBindings (SQLite3StatementRef statement);
 
-SQLite3ConnectionRef SQLite3StatementGetConnection(SQLite3StatementRef statement);
+SQLite3ConnectionRef SQLite3StatementGetConnection (SQLite3StatementRef statement);
 
-SQLite3Status SQLite3StatementStep     (SQLite3StatementRef  statement);
-SQLite3Status SQLite3StatementExecute  (SQLite3StatementRef  statement);
+SQLite3Status        SQLite3StatementStep          (SQLite3StatementRef statement);
+//SQLite3Status        SQLite3StatementExecute       (SQLite3StatementRef statement);
 
 CFStringRef SQLite3CreateColumnNameStringWithIndex (SQLite3StatementRef statement, CFIndex     index);
 CFIndex     SQLite3GetColumnIndexWithName          (SQLite3StatementRef statement, CFStringRef name);
@@ -77,7 +77,7 @@ CFDictionaryRef SQLite3StatementCreateDictionaryWithAllColumns(SQLite3StatementR
 #pragma Name based resultsets
 
 //CGImageRef   SQLite3StatementCreateImageWithColumnName(SQLite3StatementRef statement, CFStringRef name);
-void         SQLite3InsertWithDictionary(SQLite3ConnectionRef connection, CFStringRef table, CFDictionaryRef dictionary);
+SQLite3Status  SQLite3InsertWithDictionary(SQLite3ConnectionRef connection, CFStringRef table, CFDictionaryRef dictionary);
 
 //NSInteger   SQLite3StatementColumnGetIntegerWithName(SQLite3StatementRef statement, CFStringRef name);
 //CFStringRef SQLite3StatementColumnGetStringWithName(SQLite3StatementRef statement, CFStringRef name);
