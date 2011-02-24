@@ -90,7 +90,7 @@ CFErrorRef SQLite3ConnectionCreateError(SQLite3ConnectionRef connection) {
   CFErrorRef error = NULL;
   if (SQLite3ConnectionHasError(connection)) {
     const char *errmsg = connection ? sqlite3_errmsg(connection->db) : "Connection has not been allocated";
-    int errcode = connection ? sqlite3_errcode(connection->db) : SQLITE_ERROR;
+    int errcode = connection ? sqlite3_errcode(connection->db) : kSQLite3StatusError;
     CFStringRef keys[1] = { kCFErrorLocalizedDescriptionKey };
     CFStringRef values[1] = { CFStringCreateWithCString(NULL, errmsg, kCFStringEncodingUTF8) };
     CFDictionaryRef userInfo = CFDictionaryCreate(NULL, (void *)keys, (void *)values, 1, &kCFCopyStringDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
@@ -116,11 +116,14 @@ inline sqlite3 *SQLite3ConnectionGetConnection(SQLite3ConnectionRef connection) 
 inline SQLite3Status SQLite3ConnectionExecuteWithContentsOfURL(SQLite3ConnectionRef connection, CFURLRef url) {
   SQLite3Status status = kSQLite3StatusError;
   SInt32 errorCode = 0;
+  CFDictionaryRef properties = NULL;
   CFDataRef data = NULL;
-  if (CFURLCreateDataAndPropertiesFromResource(connection->allocator, url, &data, NULL, NULL, &errorCode)) {
+  if (CFURLCreateDataAndPropertiesFromResource(connection->allocator, url, &data, &properties, NULL, &errorCode)) {
     CFStringRef sql = CFStringCreateWithBytes(connection->allocator, CFDataGetBytePtr(data), CFDataGetLength(data), kCFStringEncodingUTF8, 0);
     status = SQLite3ConnectionExecute(connection, sql);
     CFRelease(sql);
+  } else {
+    // TODO: Error
   }
   return status;
 }

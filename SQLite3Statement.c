@@ -127,13 +127,11 @@ inline CFIndex SQLite3StatementGetBindParameterCount(SQLite3StatementRef stateme
   return sqlite3_bind_parameter_count(statement->stmt);
 }
 
-inline CFStringRef SQLite3StatementCreateBindParameterNameWithIndex(SQLite3StatementRef statement, CFIndex index) {
+inline CFStringRef SQLite3StatementCreateBindParameterNameWithIndex(SQLite3StatementRef statement, CFIndex index, bool withoutLeadingCharacter) {
   CFStringRef name = NULL;
   const char *name_ = sqlite3_bind_parameter_name(statement->stmt, (int)index);
-  if (name_) {
-    name = CFStringCreateWithCString(statement->allocator, name_, kCFStringEncodingUTF8);
-    // TODO: do we need to free name_?
-  }
+  if (name_)
+    name = CFStringCreateWithCString(statement->allocator, name_ + withoutLeadingCharacter, kCFStringEncodingUTF8);
   return name;
 }
 
@@ -260,6 +258,8 @@ inline SQLite3Status SQLite3StatementBindCFType(SQLite3StatementRef statement, C
       status = SQLite3StatementBindData(statement, index, (CFDataRef)value);
   //  else if (CGImageGetTypeID() == valueTypeID)
   //    status = SQLite3StatementBindImage(statement, index, (CGImageRef)value);
+    else if (CFDateGetTypeID() == valueTypeID)
+      status = SQLite3StatementBindDateTimeWithDate(statement, index, (CFDateRef)value);
     else if (CFNumberGetTypeID() == valueTypeID)
       status = SQLite3StatementBindNumber(statement, index, (CFNumberRef)value);
     else
@@ -292,23 +292,25 @@ inline SQLite3Status SQLite3StatementBindArray(SQLite3StatementRef statement, CF
   return status;
 }
 
-// TODO: This has to change; it doesn't support propertly multiple parameter names used in the query.
+// Note that the same name placeholders have the index of the first occurance in sqlite3.
+// We're binding only the keys which are present in the query. The dictionary can have
+// other keys, which will be simply ignored.
 inline SQLite3Status SQLite3StatementBindDictionary(SQLite3StatementRef statement, CFDictionaryRef keyValuePairs) {
   SQLite3Status status = kSQLite3StatusOK;
   CFIndex n = SQLite3StatementGetBindParameterCount(statement);
   for (CFIndex i = 0; i < n; i++) {
-    CFStringRef name = SQLite3StatementCreateBindParameterNameWithIndex(statement, i + 1);
+    CFStringRef name = SQLite3StatementCreateBindParameterNameWithIndex(statement, i + 1, 1);
     if (name) {
-      status = SQLite3StatementBindCFType(statement, i, CFDictionaryGetValue(keyValuePairs, name));
+      status = SQLite3StatementBindCFType(statement, i + 1, CFDictionaryGetValue(keyValuePairs, name));
       CFRelease(name);
     } else {
       
-      // i-th parameter is not in :name, @name or $name form. We don't know how to bind it
+      // i-th parameter is not in :name, @name or $name format. We don't know how to bind it
       // properly, so we're setting it to NULL.
-      status = SQLite3StatementBindNULL(statement, i);
+      status = SQLite3StatementBindNULL(statement, i + 1);
     }
-    if (status != kSQLite3StatusOK)
-      break;
+//    if (status != kSQLite3StatusOK)
+//      break;
   }
   return status;
 }

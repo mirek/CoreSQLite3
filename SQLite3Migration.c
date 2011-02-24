@@ -165,8 +165,11 @@ SQLite3Status SQLite3MigrationExecuteWithContentsOfURL(SQLite3ConnectionRef conn
   if (version) {
     if (!SQLite3MigrationDidMigratedVersion(connection, version)) {
       // TODO: transaction
-      status = SQLite3ConnectionExecuteWithContentsOfURL(connection, url);
-      SQLite3MigrationInsertVersion(connection, version); // TODO: check status
+      if (kSQLite3StatusOK == (status = SQLite3ConnectionExecuteWithContentsOfURL(connection, url))) {
+        SQLite3MigrationInsertVersion(connection, version); // TODO: check status
+      } else {
+        printf("ERROR: %i\n", status);
+      }
     }
     CFRelease(version);
   }

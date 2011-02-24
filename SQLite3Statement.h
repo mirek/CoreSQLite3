@@ -43,7 +43,7 @@ SQLite3Status SQLite3StatementBindString                       (SQLite3Statement
 SQLite3Status SQLite3StatementBindData                         (SQLite3StatementRef statement, CFIndex     index, CFDataRef   value);
 CFIndex       SQLite3StatementGetBindParameterIndexWithName    (SQLite3StatementRef statement, CFStringRef name);
 CFIndex       SQLite3StatementGetBindParameterCount            (SQLite3StatementRef statement);
-CFStringRef   SQLite3StatementCreateBindParameterNameWithIndex (SQLite3StatementRef statement, CFIndex index);
+CFStringRef   SQLite3StatementCreateBindParameterNameWithIndex (SQLite3StatementRef statement, CFIndex index, bool withoutLeadingCharacter);
 
 #pragma Extra binding functions
 

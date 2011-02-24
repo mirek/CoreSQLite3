@@ -60,28 +60,10 @@
   NSString *resourcePath = [bundle resourcePath];
   NSString *migrationsPath = [resourcePath stringByAppendingPathComponent: @"Migrations"];
   NSURL *migrationsURL = [NSURL fileURLWithPath: migrationsPath];
-
-  SQLite3Status status = SQLite3MigrationMigrateWithDirectoryURL(connection, migrationsURL);
-  
-//  CFArrayRef array = SQlite3MigrationCreateURLsArrayWithDirectoryURL(allocator, (CFURLRef)migrationsURL);
-//  
-//  STAssertEquals((CFIndex)3, CFArrayGetCount(array), @"Incorrect number of migrations");
-//  
-//  SInt32 errorCode;
-//  CFDataRef data = NULL;
-//  if (CFURLCreateDataAndPropertiesFromResource(NULL, CFArrayGetValueAtIndex(array, 0), &data, NULL, NULL, &errorCode)) {
-//    CFStringRef sql = CFStringCreateWithBytes(NULL, CFDataGetBytePtr(data), CFDataGetLength(data), kCFStringEncodingUTF8, 0);
-//    NSLog(@"DATA: %@", sql);
-//    CFRelease(sql);
-//    CFRelease(data);
-//  } else {
-//    NSLog(@"FAIL");
-//  }
-//  
-//  CFRelease(array);
+  SQLite3MigrationMigrateWithDirectoryURL(connection, (CFURLRef)migrationsURL);
 }
 
-- (void) _testCreateUsersTable {
+- (void) testCreateUsersTable {
   NSError *error = nil;
   
   SQLite3ConnectionDropTableIfExists(connection, CFSTR("users"));
