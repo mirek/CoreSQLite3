@@ -10,7 +10,7 @@
 
 #pragma Lifecycle
 
-inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql) {
+inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error) {
   SQLite3StatementRef statement = CFAllocatorAllocate(allocator, sizeof(SQLite3Statement), 0);
   if (statement) {
     statement->connection = SQLite3ConnectionRetain(connection);   // Let's retain connection
@@ -18,15 +18,25 @@ inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQL
     statement->retainCount = 1;
     statement->stmt = NULL;
     __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringMake(statement->allocator, sql);
-    if (kSQLite3StatusOK != sqlite3_prepare_v2(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), -1, &statement->stmt, NULL))
+    SQLite3Status status = sqlite3_prepare_v2(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), -1, &statement->stmt, NULL);
+    if (kSQLite3StatusOK != status) {
+      if (error) {
+        *error = CFErrorCreate(allocator, CFSTR("com.github.mirek.SQLite3"), status, NULL);
+      }
+      printf("ERROR: %s\n", sqlite3_errmsg(connection->db));
       statement = SQLite3StatementRelease(statement); // ...will be set to NULL
+    }
     __SQLite3UTF8StringDestroy(utf8Sql);
   }
   return statement;
 }
 
+inline SQLite3StatementRef SQLite3StatementCreateWithError(SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error) {
+  return _SQLite3StatementCreate(connection->allocator, connection, sql, error);
+}
+
 inline SQLite3StatementRef SQLite3StatementCreate(SQLite3ConnectionRef connection, CFStringRef sql) {
-  return _SQLite3StatementCreate(connection->allocator, connection, sql);
+  return SQLite3StatementCreateWithError(connection, sql, NULL);
 }
 
 inline SQLite3StatementRef SQLite3StatementRetain(SQLite3StatementRef statement) {
@@ -83,7 +93,7 @@ inline CFStringRef SQLite3CreateColumnNameStringWithIndex(SQLite3StatementRef st
   CFStringRef name = NULL;
   const char *name_ = sqlite3_column_name(statement->stmt, (int)index);
   if (name_) {
-    name = CFStringCreateWithCString(NULL, name_, kCFStringEncodingUTF8);
+    name = CFStringCreateWithCString(statement->allocator, name_, kCFStringEncodingUTF8);
     // TODO: Do we need to release name_?
   }
   return name;
@@ -232,8 +242,8 @@ inline SQLite3Status SQLite3StatementBindNumber(SQLite3StatementRef statement, C
 }
 
 inline SQLite3Status SQLite3StatementBindDateTimeWithAbsoluteTime(SQLite3StatementRef statement, CFIndex index, CFAbsoluteTime value) {
-  CFDateRef date = CFDateCreate(NULL, value);
-  CFStringRef string = CFDateFormatterCreateStringWithDate(NULL, statement->connection->defaultDateFormatter, date);
+  CFDateRef date = CFDateCreate(statement->allocator, value);
+  CFStringRef string = CFDateFormatterCreateStringWithDate(statement->allocator, statement->connection->defaultDateFormatter, date);
   int result = SQLite3StatementBindString(statement, index, string);
   CFRelease(string);
   CFRelease(date);
@@ -342,11 +352,11 @@ inline bool SQLite3StatementGetBOOLWithColumn(SQLite3StatementRef statement, CFI
 }
 
 inline CFStringRef SQLite3StatementCreateStringWithColumn(SQLite3StatementRef statement, CFIndex index) {
-  return CFStringCreateWithBytes(NULL, sqlite3_column_text(statement->stmt, (int)index), sqlite3_column_bytes(statement->stmt, (int)index), kCFStringEncodingUTF8, 0);
+  return CFStringCreateWithBytes(statement->allocator, sqlite3_column_text(statement->stmt, (int)index), sqlite3_column_bytes(statement->stmt, (int)index), kCFStringEncodingUTF8, 0);
 }
 
 inline CFDataRef SQLite3StatementCreateDataWithColumn(SQLite3StatementRef statement, CFIndex index) {
-  return CFDataCreate(NULL, sqlite3_column_blob(statement->stmt, (int)index), sqlite3_column_bytes(statement->stmt, (int)index));
+  return CFDataCreate(statement->allocator, sqlite3_column_blob(statement->stmt, (int)index), sqlite3_column_bytes(statement->stmt, (int)index));
 }
 
 inline CFDateRef SQLite3StatementCreateDateWithColumn(SQLite3StatementRef statement, CFIndex index) {
@@ -413,11 +423,11 @@ inline CFDictionaryRef SQLite3StatementCreateDictionaryWithAllColumns(SQLite3Sta
   return dictionary;
 }
 
-inline CFPropertyListRef SQLite3StatementCreatePropertyListWithColumn(SQLite3StatementRef statement, CFIndex index, CFOptionFlags options, CFPropertyListFormat *format, CFErrorRef *error) {
+inline CFPropertyListRef SQLite3StatementCreatePropertyListWithColumn(SQLite3StatementRef statement, CFIndex index, CFOptionFlags options, CFPropertyListFormat *format) {
   CFPropertyListRef result = NULL;
   CFDataRef data = SQLite3StatementCreateDataWithColumn(statement, index);
   if (data) {
-    result = CFPropertyListCreateWithData(statement->allocator, data, options, format, error);
+    result = CFPropertyListCreateWithData(statement->allocator, data, options, format, NULL);
     CFRelease(data);
   }
   return result;
@@ -462,6 +472,7 @@ inline const char *_SQLite3CreateValuesPlaceholderCString(CFAllocatorRef allocat
 // - sanitize table name and keys
 // - return values for binding
 inline SQLite3Status SQLite3InsertWithDictionary(SQLite3ConnectionRef connection, CFStringRef table, CFDictionaryRef dictionary) {
+  SQLite3Status status = kSQLite3StatusError;
   CFIndex n = CFDictionaryGetCount(dictionary);
   const void **keys = CFAllocatorAllocate(connection->allocator, sizeof(void *) * n, 0);
   const void **values = CFAllocatorAllocate(connection->allocator, sizeof(void *) * n, 0);
@@ -472,12 +483,14 @@ inline SQLite3Status SQLite3InsertWithDictionary(SQLite3ConnectionRef connection
   const char *valuesCString = _SQLite3CreateValuesPlaceholderCString(connection->allocator, n);
   CFStringRef sql = CFStringCreateWithFormat(connection->allocator, NULL, CFSTR("INSERT INTO %@(%@) VALUES(%s)"), table, keysString, valuesCString);
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
-  SQLite3StatementBindArray(statement, valuesArray);
-  SQLite3Status status = SQLite3StatementStep(statement);
-  SQLite3StatementReset(statement);
-  SQLite3StatementClearBindings(statement);
-  SQLite3StatementFinalize(statement);
-  SQLite3StatementRelease(statement);
+  if (statement) {
+    SQLite3StatementBindArray(statement, valuesArray);
+    status = SQLite3StatementStep(statement);
+    SQLite3StatementReset(statement);
+    SQLite3StatementClearBindings(statement);
+    SQLite3StatementFinalize(statement);
+    SQLite3StatementRelease(statement);
+  }
   CFRelease(sql);
   CFAllocatorDeallocate(connection->allocator, (void *)valuesCString);
   CFRelease(keysString);

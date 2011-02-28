@@ -14,13 +14,14 @@ const char *_SQLite3CreateValuesPlaceholderCString(CFAllocatorRef allocator, CFI
 
 #pragma Lifecycle
 
-SQLite3StatementRef _SQLite3StatementCreate        (CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql);
-SQLite3StatementRef  SQLite3StatementCreate        (SQLite3ConnectionRef connection, CFStringRef sql);
-SQLite3StatementRef  SQLite3StatementRetain        (SQLite3StatementRef statement);
-SQLite3StatementRef  SQLite3StatementRelease       (SQLite3StatementRef statement);
-SQLite3Status        SQLite3StatementFinalize      (SQLite3StatementRef statement);
-SQLite3Status        SQLite3StatementReset         (SQLite3StatementRef statement);
-SQLite3Status        SQLite3StatementClearBindings (SQLite3StatementRef statement);
+SQLite3StatementRef _SQLite3StatementCreate          (CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error);
+SQLite3StatementRef  SQLite3StatementCreateWithError (SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error);
+SQLite3StatementRef  SQLite3StatementCreate          (SQLite3ConnectionRef connection, CFStringRef sql);
+SQLite3StatementRef  SQLite3StatementRetain          (SQLite3StatementRef statement);
+SQLite3StatementRef  SQLite3StatementRelease         (SQLite3StatementRef statement);
+SQLite3Status        SQLite3StatementFinalize        (SQLite3StatementRef statement);
+SQLite3Status        SQLite3StatementReset           (SQLite3StatementRef statement);
+SQLite3Status        SQLite3StatementClearBindings   (SQLite3StatementRef statement);
 
 SQLite3ConnectionRef SQLite3StatementGetConnection (SQLite3StatementRef statement);
 
@@ -68,7 +69,7 @@ bool              SQLite3StatementGetBOOLWithColumn            (SQLite3Statement
 CFStringRef       SQLite3StatementCreateStringWithColumn       (SQLite3StatementRef statement, CFIndex index);
 CFDataRef         SQLite3StatementCreateDataWithColumn         (SQLite3StatementRef statement, CFIndex index);
 CFDateRef         SQLite3StatementCreateDateWithColumn         (SQLite3StatementRef statement, CFIndex index);
-CFPropertyListRef SQLite3StatementCreatePropertyListWithColumn (SQLite3StatementRef statement, CFIndex index, CFOptionFlags options, CFPropertyListFormat *format, CFErrorRef *error);
+CFPropertyListRef SQLite3StatementCreatePropertyListWithColumn (SQLite3StatementRef statement, CFIndex index, CFOptionFlags options, CFPropertyListFormat *format);
 
 //CGImageRef  SQLite3StatementCreateImageWithColumn  (SQLite3StatementRef statement, CFIndex index);
 

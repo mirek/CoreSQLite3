@@ -10,14 +10,14 @@
 
 #pragma Lifecycle
 
-inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, int flags, const char *zVfs) {
+inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, SQLite3OpenOptions flags, const char *zVfs) {
   SQLite3ConnectionRef connection = CFAllocatorAllocate(allocator, sizeof(SQLite3ConnectionRef), 0);
   if (connection) {
     connection->allocator = allocator ? CFRetain(allocator) : NULL;
     connection->retainCount = 1;
     
     // Default date formatter
-    connection->defaultDateFormatter = CFDateFormatterCreate(NULL, NULL, kCFDateFormatterNoStyle, kCFDateFormatterNoStyle);
+    connection->defaultDateFormatter = CFDateFormatterCreate(allocator, NULL, kCFDateFormatterNoStyle, kCFDateFormatterNoStyle);
     CFDateFormatterSetFormat(connection->defaultDateFormatter, CFSTR("yyyy-MM-dd HH:mm:ss"));
     
     __SQLite3UTF8String utf8Path = __SQLite3UTF8StringMake(connection->allocator, path);
@@ -31,7 +31,7 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
   return connection;
 }
 
-inline SQLite3ConnectionRef SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, int flags, const char *zVfs) {
+inline SQLite3ConnectionRef SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, SQLite3OpenOptions flags, const char *zVfs) {
   return _SQLite3ConnectionCreate(allocator, path, flags, zVfs);
 }
 
@@ -92,13 +92,17 @@ CFErrorRef SQLite3ConnectionCreateError(SQLite3ConnectionRef connection) {
     const char *errmsg = connection ? sqlite3_errmsg(connection->db) : "Connection has not been allocated";
     int errcode = connection ? sqlite3_errcode(connection->db) : kSQLite3StatusError;
     CFStringRef keys[1] = { kCFErrorLocalizedDescriptionKey };
-    CFStringRef values[1] = { CFStringCreateWithCString(NULL, errmsg, kCFStringEncodingUTF8) };
-    CFDictionaryRef userInfo = CFDictionaryCreate(NULL, (void *)keys, (void *)values, 1, &kCFCopyStringDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    error = CFErrorCreate(NULL, CFSTR("com.github.mirek.CoreSQLite3"), errcode, userInfo);
+    CFStringRef values[1] = { CFStringCreateWithCString(connection->allocator, errmsg, kCFStringEncodingUTF8) };
+    CFDictionaryRef userInfo = CFDictionaryCreate(connection->allocator, (void *)keys, (void *)values, 1, &kCFCopyStringDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    error = CFErrorCreate(connection->allocator, CFSTR("com.github.mirek.CoreSQLite3"), errcode, userInfo);
     CFRelease(userInfo);
     CFRelease(values[0]);
   }
   return error;
+}
+
+inline SQLite3Status SQLite3ConnectionGetStatus(SQLite3ConnectionRef connection) {
+  return connection ? sqlite3_errcode(connection->db) : kSQLite3StatusError;
 }
 
 // If the connection is NULL or sqlite3 connection has an error, return YES. Otherwise return NO.
@@ -151,25 +155,35 @@ inline SQLite3Status SQLite3ConnectionExecute(SQLite3ConnectionRef connection, C
   return status;
 }
 
-inline SQLite3Status SQLite3ConnectionExecuteWithArrayBindings(SQLite3ConnectionRef connection, CFStringRef sql, CFArrayRef values) {
-  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
-  SQLite3StatementBindArray(statement, values);
-  SQLite3Status status = SQLite3StatementStep(statement);
-  SQLite3StatementReset(statement);
-  SQLite3StatementClearBindings(statement);
-  SQLite3StatementFinalize(statement);
-  SQLite3StatementRelease(statement);
+inline SQLite3Status SQLite3ConnectionExecuteWithArrayBindingsAndError(SQLite3ConnectionRef connection, CFStringRef sql, CFArrayRef values, CFErrorRef *error) {
+  SQLite3Status status = kSQLite3StatusError;
+  SQLite3StatementRef statement = SQLite3StatementCreateWithError(connection, sql, error);
+  if (statement) {
+    SQLite3StatementBindArray(statement, values);
+    status = SQLite3StatementStep(statement);
+    SQLite3StatementReset(statement);
+    SQLite3StatementClearBindings(statement);
+    SQLite3StatementFinalize(statement);
+    SQLite3StatementRelease(statement);
+  }
   return status;
 }
 
-inline SQLite3Status SQLite3ConnectionExecuteWithDictionaryBindings(SQLite3ConnectionRef connection, CFStringRef sql, CFDictionaryRef keysValues) {
+inline SQLite3Status SQLite3ConnectionExecuteWithArrayBindings(SQLite3ConnectionRef connection, CFStringRef sql, CFArrayRef values) {
+  return SQLite3ConnectionExecuteWithArrayBindingsAndError(connection, sql, values, NULL);
+}
+
+inline SQLite3Status SQLite3ConnectionExecuteWithDictionaryBindings(SQLite3ConnectionRef connection, CFStringRef sql, CFDictionaryRef keyValuePairs) {
+  SQLite3Status status = kSQLite3StatusError;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
-  SQLite3StatementBindDictionary(statement, keysValues);
-  SQLite3Status status = SQLite3StatementStep(statement);
-  SQLite3StatementReset(statement);
-  SQLite3StatementClearBindings(statement);
-  SQLite3StatementFinalize(statement);
-  SQLite3StatementRelease(statement);
+  if (statement) {
+    SQLite3StatementBindDictionary(statement, keyValuePairs);
+    status = SQLite3StatementStep(statement);
+    SQLite3StatementReset(statement);
+    SQLite3StatementClearBindings(statement);
+    SQLite3StatementFinalize(statement);
+    SQLite3StatementRelease(statement);
+  }
   return status;
 }
 
@@ -261,14 +275,16 @@ inline CFDictionaryRef SQLite3ConnectionCreateDictionaryForAllColumnsWithQuery(S
   return value;
 }
 
-inline CFPropertyListRef SQLite3ConnectionCreatePropertyListWithQuery(SQLite3ConnectionRef connection, CFStringRef sql, CFOptionFlags options, CFPropertyListFormat *format, CFErrorRef *error) {
+inline CFPropertyListRef SQLite3ConnectionCreatePropertyListWithQuery(SQLite3ConnectionRef connection, CFStringRef sql, CFOptionFlags options, CFPropertyListFormat *format) {
   CFPropertyListRef value = NULL;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
-  if (kSQLite3StatusRow == SQLite3StatementStep(statement))
-    value = SQLite3StatementCreatePropertyListWithColumn(statement, 0, options, format, error);
-  SQLite3StatementReset(statement);
-  SQLite3StatementFinalize(statement);
-  SQLite3StatementRelease(statement);
+  if (statement) {
+    if (kSQLite3StatusRow == SQLite3StatementStep(statement))
+      value = SQLite3StatementCreatePropertyListWithColumn(statement, 0, options, format);
+    SQLite3StatementReset(statement);
+    SQLite3StatementFinalize(statement);
+    SQLite3StatementRelease(statement);
+  }
   return value;
 }
 

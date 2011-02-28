@@ -13,7 +13,7 @@
 - (void) setUp {
   [super setUp];
   allocator = TestAllocatorCreate();
-  connection = SQLite3ConnectionCreate(allocator, CFSTR("/Users/Mirek/my.db"), SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
+  connection = SQLite3ConnectionCreate(allocator, CFSTR("/Users/Mirek/my.db"), kSQLite3OpenCreate | kSQLite3OpenReadWrite, NULL);
   SQLite3ConnectionSetBusyTimeout(connection, 3.0);
   STAssertTrue(connection != NULL, @"Connection should be allocated");
   STAssertFalse(SQLite3ConnectionHasError(connection), @"Connection should't have errors, but got '%s'", sqlite3_errmsg(connection->db));
@@ -105,7 +105,7 @@
     SQLite3StatementRelease(statement);
     
     STAssertEquals(1, SQLite3ConnectionGetInt32WithQuery(connection, CFSTR("select count(*) from users where data is not null")), @"Should be one user with data");
-    CFPropertyListRef propertyList = SQLite3ConnectionCreatePropertyListWithQuery(connection, CFSTR("select data from users where data is not null"), kCFPropertyListImmutable, NULL, NULL);
+    CFPropertyListRef propertyList = SQLite3ConnectionCreatePropertyListWithQuery(connection, CFSTR("select data from users where data is not null"), kCFPropertyListImmutable, NULL);
     STAssertNotNil(propertyList, @"Property list shouldn't be nil");
     CFRelease(propertyList);
   }
