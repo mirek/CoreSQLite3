@@ -242,12 +242,12 @@ inline SQLite3Status SQLite3StatementBindNumber(SQLite3StatementRef statement, C
 }
 
 inline SQLite3Status SQLite3StatementBindDateTimeWithAbsoluteTime(SQLite3StatementRef statement, CFIndex index, CFAbsoluteTime value) {
-  CFDateRef date = CFDateCreate(statement->allocator, value);
-  CFStringRef string = CFDateFormatterCreateStringWithDate(statement->allocator, statement->connection->defaultDateFormatter, date);
-  int result = SQLite3StatementBindString(statement, index, string);
-  CFRelease(string);
-  CFRelease(date);
-  return result;
+//  CFDateRef date = CFDateCreate(statement->allocator, value);
+//  CFStringRef string = CFDateFormatterCreateStringWithDate(statement->allocator, statement->connection->defaultDateFormatter, date);
+//  int result = SQLite3StatementBindString(statement, index, string);
+//  CFRelease(string);
+//  CFRelease(date);
+  return SQLite3StatementBindDouble(statement, index, value - kCFAbsoluteTimeIntervalSince1970);
 }
 
 inline SQLite3Status SQLite3StatementBindDateTimeWithDate(SQLite3StatementRef statement, CFIndex index, CFDateRef value) {
@@ -331,7 +331,7 @@ inline CFIndex SQLite3StatementGetColumnsCount(SQLite3StatementRef statement) {
   return sqlite3_column_count(statement->stmt);
 }
 
-inline SQLite3Type SQLite3StatementGetColumnType(SQLite3StatementRef statement, CFIndex index) {
+inline SQLite3ColumnType SQLite3StatementGetColumnType(SQLite3StatementRef statement, CFIndex index) {
   return sqlite3_column_type(statement->stmt, (int)index);
 }
 

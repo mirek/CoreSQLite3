@@ -8,6 +8,10 @@
 
 #import "Tests.h"
 
+void TestUpdateCallbackCallback1(SQLite3ConnectionRef connection, SQLite3Action action, CFStringRef table, sqlite3_int64 rowId, void *userInfo) {
+  *(bool *)userInfo = 1;
+}
+
 @implementation Tests
 
 - (void) setUp {
@@ -61,6 +65,32 @@
   NSString *migrationsPath = [resourcePath stringByAppendingPathComponent: @"Migrations"];
   NSURL *migrationsURL = [NSURL fileURLWithPath: migrationsPath];
   SQLite3MigrationMigrateWithDirectoryURL(connection, (CFURLRef)migrationsURL);
+}
+
+- (void) testUpdateCallback {
+  SQLite3ConnectionExecute(connection, CFSTR("create table test_update_callback(id int primary key, name string)"));
+  
+  bool didInvoke = 0;
+  
+//  SQLite3ObserverRef observer = SQLite3ConnectionCreateObserver(connection, kSQLite3ActionInsert | kSQLite3ActionUpdate | kSQLite3ActionDelete);
+//  
+//  SQLite3ObserverSetBlock(observer, ^(SQLite3Action action, CFStringRef table, sqlite3_int64 rowId) {
+//    if (CFStringCompare(CFSTR("test_update_callback"), table, 0)) {
+//      NSLog(@"Change of %lld", rowId);
+//    }
+//  });
+//  
+//  SQLite3ObserverRelease(observer);
+  
+  SQLite3ConnectionAppendUpdateCallback(connection, TestUpdateCallbackCallback1, &didInvoke);
+  
+  STAssertFalse(didInvoke, @"Should't yet invoke callback");
+  SQLite3ConnectionExecute(connection, CFSTR("insert into test_update_callback(id, name) values(1, 'mirek')"));
+  STAssertTrue(didInvoke, @"Should invoke callback");
+
+  //SQLite3ConnectionRemoveUpdateCallback(connection, TestUpdateCallbackCallback1);
+
+  SQLite3ConnectionDropTable(connection, CFSTR("test_update_callback"));
 }
 
 - (void) testCreateUsersTable {

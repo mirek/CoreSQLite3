@@ -8,6 +8,8 @@
 
 #import "CoreSQLite3.h"
 
+#define kSQLite3UpdateCallbacksMaxCount 64
+
 #pragma Public types
 
 typedef enum SQLite3Status {
@@ -64,14 +66,71 @@ typedef enum SQLite3OpenOptions {
   kSQLite3OpenWAL               = SQLITE_OPEN_WAL             // 0x00080000 VFS only
 } SQLite3OpenOptions;
 
+typedef enum SQLite3Action {
+  kSQLite3ActionCreateIndex            = SQLITE_CREATE_INDEX,        //   1 Index Name      Table Name      
+  kSQLite3ActionCreateTable            = SQLITE_CREATE_TABLE,        //   2 Table Name      NULL            
+  kSQLite3ActionCreateTemporaryIndex   = SQLITE_CREATE_TEMP_INDEX,   //   3 Index Name      Table Name      
+  kSQLite3ActionCreateTemporaryTable   = SQLITE_CREATE_TEMP_TABLE,   //   4 Table Name      NULL            
+  kSQLite3ActionCreateTemporaryTrigger = SQLITE_CREATE_TEMP_TRIGGER, //   5 Trigger Name    Table Name      
+  kSQLite3ActionCreateTemporaryView    = SQLITE_CREATE_TEMP_VIEW,    //   6 View Name       NULL            
+  kSQLite3ActionCreateTrigger          = SQLITE_CREATE_TRIGGER,      //   7 Trigger Name    Table Name      
+  kSQLite3ActionCreateView             = SQLITE_CREATE_VIEW,         //   8 View Name       NULL            
+  kSQLite3ActionDelete                 = SQLITE_DELETE,              //   9 Table Name      NULL            
+  kSQLite3ActionDropIndex              = SQLITE_DROP_INDEX,          //  10 Index Name      Table Name      
+  kSQLite3ActionDropTable              = SQLITE_DROP_TABLE,          //  11 Table Name      NULL            
+  kSQLite3ActionDropTemporaryIndex     = SQLITE_DROP_TEMP_INDEX,     //  12 Index Name      Table Name      
+  kSQLite3ActionDropTemporaryTable     = SQLITE_DROP_TEMP_TABLE,     //  13 Table Name      NULL            
+  kSQLite3ActionDropTemporaryTrigger   = SQLITE_DROP_TEMP_TRIGGER,   //  14 Trigger Name    Table Name      
+  kSQLite3ActionDropTemporaryView      = SQLITE_DROP_TEMP_VIEW,      //  15 View Name       NULL            
+  kSQLite3ActionDropTrigger            = SQLITE_DROP_TRIGGER,        //  16 Trigger Name    Table Name      
+  kSQLite3ActionDropView               = SQLITE_DROP_VIEW,           //  17 View Name       NULL            
+  kSQLite3ActionInsert                 = SQLITE_INSERT,              //  18 Table Name      NULL            
+  kSQLite3ActionPragma                 = SQLITE_PRAGMA,              //  19 Pragma Name     1st arg or NULL 
+  kSQLite3ActionRead                   = SQLITE_READ,                //  20 Table Name      Column Name     
+  kSQLite3ActionSelect                 = SQLITE_SELECT,              //  21 NULL            NULL            
+  kSQLite3ActionTransaction            = SQLITE_TRANSACTION,         //  22 Operation       NULL            
+  kSQLite3ActionUpdate                 = SQLITE_UPDATE,              //  23 Table Name      Column Name     
+  kSQLite3ActionAttach                 = SQLITE_ATTACH,              //  24 Filename        NULL            
+  kSQLite3ActionDetach                 = SQLITE_DETACH,              //  25 Database Name   NULL            
+  kSQLite3ActionAlterTable             = SQLITE_ALTER_TABLE,         //  26 Database Name   Table Name      
+  kSQLite3ActionReindex                = SQLITE_REINDEX,             //  27 Index Name      NULL            
+  kSQLite3ActionAnalyze                = SQLITE_ANALYZE,             //  28 Table Name      NULL            
+  kSQLite3ActionCreateVirtualTable     = SQLITE_CREATE_VTABLE,       //  29 Table Name      Module Name     
+  kSQLite3ActionDropVirtualTable       = SQLITE_DROP_VTABLE,         //  30 Table Name      Module Name     
+  kSQLite3ActionFunction               = SQLITE_FUNCTION,            //  31 NULL            Function Name   
+  kSQLite3ActionSavePoint              = SQLITE_SAVEPOINT,           //  32 Operation       Savepoint Name  
+} SQLite3Action;
+
+typedef enum SQLite3ColumnType {
+  kSQLite3TypeInteger = SQLITE_INTEGER,
+  kSQLite3TypeFloat   = SQLITE_FLOAT,
+  kSQLite3TypeData    = SQLITE_BLOB,
+  kSQLite3TypeNULL    = SQLITE_NULL,
+  kSQLite3TypeString  = SQLITE_TEXT,
+} SQLite3ColumnType;
+
+//extern typedef struct SQLite3ConnectionRef SQLite3ConnectionRef;
+
+#pragma Callbacks
+
+typedef struct __SQLite3UpdateCallbackWithUserInfo {
+  void *callback;
+  void *userInfo;
+} __SQLite3CallbackWithUserInfo;
+
 typedef struct SQLite3Connection {
   CFAllocatorRef     allocator;
   CFIndex            retainCount;
   sqlite3           *db;
   CFDateFormatterRef defaultDateFormatter;
+  
+  CFIndex                                    __updateCallbacksWithUserInfoCount;
+  struct __SQLite3UpdateCallbackWithUserInfo __updateCallbacksWithUserInfo[kSQLite3UpdateCallbacksMaxCount];
 } SQLite3Connection;
 
 typedef SQLite3Connection* SQLite3ConnectionRef;
+
+typedef void (*SQLite3UpdateCallback)(SQLite3ConnectionRef connection, SQLite3Action action, CFStringRef table, sqlite3_int64 rowId, void *userInfo);
 
 typedef struct SQLite3Statement {
   CFAllocatorRef       allocator;
@@ -82,16 +141,16 @@ typedef struct SQLite3Statement {
 
 typedef SQLite3Statement *SQLite3StatementRef;
 
-typedef enum SQLite3Type {
-  kSQLite3TypeInteger = SQLITE_INTEGER,
-  kSQLite3TypeFloat   = SQLITE_FLOAT,
-  kSQLite3TypeData    = SQLITE_BLOB,
-  kSQLite3TypeNULL    = SQLITE_NULL,
-  kSQLite3TypeString  = SQLITE_TEXT,
-} SQLite3Type;
+typedef struct SQLite3Observer {
+  CFAllocatorRef       allocator;
+  CFIndex              retainCount;
+  SQLite3ConnectionRef connection;
+  bool                 enabled;
+  SQLite3Action        actions;
+  CFStringRef          table;
+  void                *callback;
+} SQLite3Observer;
 
-//typedef enum {
-//  kSQLite3OpenOptionReadOnly  = SQLITE_OPEN_READONLY,
-//  kSQLite3OpenOptionReadWrite = SQLITE_OPEN_READWRITE,
-//  kSQLite3OpenOptionAutoProxy = SQLITE_OPEN_AUTOPROXY,
-//} SQLite3OpenOptions;
+typedef SQLite3Observer *SQLite3ObserverRef;
+
+typedef void (*SQLite3ObserverCallback)(SQLite3ObserverRef observer, SQLite3Action action, CFStringRef table, sqlite3_int64 rowId);

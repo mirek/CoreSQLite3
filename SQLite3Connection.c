@@ -8,6 +8,8 @@
 
 #include "SQLite3Connection.h"
 
+#define kSQlite3UserCallbacksMaxCount 64
+
 #pragma Lifecycle
 
 inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, SQLite3OpenOptions flags, const char *zVfs) {
@@ -16,9 +18,14 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
     connection->allocator = allocator ? CFRetain(allocator) : NULL;
     connection->retainCount = 1;
     
+    // Please note update hook will be set automatically when adding update callbacks
+    // When removing callbacks, if the number of callbacks goes back to 0, we're removing
+    // default hook.
+    connection->__updateCallbacksWithUserInfoCount = 0;
+    
     // Default date formatter
     connection->defaultDateFormatter = CFDateFormatterCreate(allocator, NULL, kCFDateFormatterNoStyle, kCFDateFormatterNoStyle);
-    CFDateFormatterSetFormat(connection->defaultDateFormatter, CFSTR("yyyy-MM-dd HH:mm:ss"));
+    CFDateFormatterSetFormat(connection->defaultDateFormatter, CFSTR("yyyy-MM-dd HH:mm:ss.SSS"));
     
     __SQLite3UTF8String utf8Path = __SQLite3UTF8StringMake(connection->allocator, path);
     if (kSQLite3StatusOK == sqlite3_open_v2(__SQLite3UTF8StringGetBuffer(utf8Path), &connection->db, flags, zVfs)) {
@@ -351,3 +358,93 @@ inline bool SQLite3ConnectionDoesTableOrViewExist(SQLite3ConnectionRef connectio
 inline SQLite3Status SQLite3ConnectionSetBusyTimeout(SQLite3ConnectionRef connection, CFTimeInterval ti) {
   return sqlite3_busy_timeout(connection->db, (int)(ti * 1000));
 }
+
+#pragma Update callbacks
+
+//inline void __SQLite3ConnectionSetUpdateHook(SQLite3ConnectionRef connection, void(*callback)(void *userInfo, int action, char const *databaseName, char const *tableName, sqlite3_int64 rowId), void *userInfo) {
+//  if (connection) {
+//    sqlite3_update_hook(connection->db, callback, userInfo);
+//  }
+//}
+
+inline void __SQLite3ConnectionDefaultUpdateHook(void *userInfo, int anAction, char const *aDatabaseName, char const *aTableName, sqlite3_int64 aRowId) {
+  SQLite3ConnectionRef connection = (SQLite3ConnectionRef)userInfo;
+  if (connection) {
+    if (connection->__updateCallbacksWithUserInfoCount > 0) {
+      CFStringRef table = CFStringCreateWithCStringNoCopy(connection->allocator, aTableName, kCFStringEncodingUTF8, kCFAllocatorNull);
+      for (CFIndex i = 0; i < connection->__updateCallbacksWithUserInfoCount; i++)
+        ((SQLite3UpdateCallback)connection->__updateCallbacksWithUserInfo[i].callback)(connection, anAction, table, aRowId, connection->__updateCallbacksWithUserInfo[i].userInfo);
+      CFRelease(table);
+    }
+  }
+}
+
+inline bool SQLite3ConnectionAppendUpdateCallback(SQLite3ConnectionRef connection, SQLite3UpdateCallback callback, void *userInfo) {
+  bool success = 0;
+  if (connection && callback) {
+      
+    if (connection->__updateCallbacksWithUserInfoCount < kSQlite3UserCallbacksMaxCount) {
+      connection->__updateCallbacksWithUserInfo[connection->__updateCallbacksWithUserInfoCount].callback = callback;
+      connection->__updateCallbacksWithUserInfo[connection->__updateCallbacksWithUserInfoCount].userInfo = userInfo;
+      connection->__updateCallbacksWithUserInfoCount++;
+      success = 1;
+    }
+    
+    // Registered the first callback? Set the hook.
+    if (connection->__updateCallbacksWithUserInfoCount == 1)
+      sqlite3_update_hook(connection->db, __SQLite3ConnectionDefaultUpdateHook, connection);
+
+  }
+  return success;
+}
+
+inline bool SQLite3ConnectionRemoveUpdateCallback(SQLite3ConnectionRef connection, SQLite3UpdateCallback callback, void *userInfo) {
+  bool success = 0;
+  if (connection && callback) {
+    
+    // TODO: critial section
+    for (int i = 0; i < connection->__updateCallbacksWithUserInfoCount; i++) {
+      if (connection->__updateCallbacksWithUserInfo[i].callback == callback && connection->__updateCallbacksWithUserInfo[i].userInfo == userInfo) {
+        CFIndex n = --connection->__updateCallbacksWithUserInfoCount;
+        connection->__updateCallbacksWithUserInfo[i].callback = connection->__updateCallbacksWithUserInfo[n].callback;
+        connection->__updateCallbacksWithUserInfo[i].userInfo = connection->__updateCallbacksWithUserInfo[n].userInfo;
+        success = 1;
+        break;
+      }
+    }
+    
+    // De-registered last callback? Nullify the hook.
+    if (connection->__updateCallbacksWithUserInfoCount == 0)
+      sqlite3_update_hook(connection->db, NULL, connection);
+  }
+  return success;
+}
+
+//CFMutableArrayRef __SQLite3ConnectionGetObserversWithTable(SQLite3ConnectionRef connection, CFStringRef tableOrNull) {
+//  CFMutableArrayRef array = NULL;
+//  if (connection) {
+//    CFTypeRef key = tableOrNull ? (CFTypeRef)tableOrNull : kCFNull;
+//    array = (CFMutableArrayRef)CFDictionaryGetValue(connection->__observers, key);
+//    if (array == NULL) {
+//      array = CFArrayCreateMutable(connection->allocator, 0, &kCFTypeArrayCallBacks);
+//      CFDictionarySetValue(connection->__observers, key, array);
+//      CFRelease(array);
+//    }
+//  }
+//  return array;
+//}
+//
+//bool __SQLite3ConnectionObserverIsEnabled(SQLite3ConnectionRef connection, SQLite3ObserverRef observer) {
+//  CFArrayRef observers = __SQLite3ConnectionGetObserversWithTable(connection, observer->table);
+//  return CFArrayGetFirstIndexOfValue(observers, CFRangeMake(0, CFArrayGetCount(observers)), observer);
+//}
+//
+//void __SQLite3ConnectionObserverEnable(SQLite3ConnectionRef connection, SQLite3ObserverRef observer) {
+//  if (connection) {
+//    if (observer) {
+//      CFMutableArrayRef observers = __SQLite3ConnectionGetObserversWithTable(connection, observer->table);
+//    }
+//  }
+//}
+//
+//void __SQLite3ConnectionObserverDisable(SQLite3ConnectionRef connection, SQLite3ObserverRef observer);

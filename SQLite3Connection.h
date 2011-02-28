@@ -27,6 +27,21 @@ extern SQLite3Status SQLite3ConnectionDropTableIfExists (SQLite3ConnectionRef co
 
 extern SQLite3Status SQLite3ConnectionSetBusyTimeout    (SQLite3ConnectionRef connection, CFTimeInterval ti);
 
+#pragma Observers
+
+//extern void __SQLite3ConnectionSetUpdateHook              (SQLite3ConnectionRef connection, void(*callback)(void *userInfo, int action, char const *databaseName, char const *tableName, sqlite3_int64 rowId), void *userInfo);
+
+extern void __SQLite3ConnectionDefaultUpdateHook          (void *userInfo, int anAction, char const *aDatabaseName, char const *aTableName, sqlite3_int64 aRowId);
+
+extern bool SQLite3ConnectionAppendUpdateCallback       (SQLite3ConnectionRef connection, SQLite3UpdateCallback callback, void *userInfo);
+extern bool SQLite3ConnectionRemoveUpdateCallback       (SQLite3ConnectionRef connection, SQLite3UpdateCallback callback, void *userInfo);
+
+//void __SQLite3ConnectionEnableObserver  (SQLite3ConnectionRef connection, SQLite3ObserverRef observer);
+//void __SQLite3ConnectionDisableObserver (SQLite3ConnectionRef connection, SQLite3ObserverRef observer);
+
+//typedef SQLite3ConnectionDefaultUpdateHook SQLite3ConnectionDefaultUpdateHook;
+//kSQLite3ConnectionDefaultUpdateHook;
+
 #pragma Resultset utility functions
 
 SQLite3Status     SQLite3ConnectionExecuteWithContentsOfURL               (SQLite3ConnectionRef connection, CFURLRef url);

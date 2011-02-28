@@ -60,7 +60,7 @@ SQLite3Status SQLite3StatementBindPropertyListWithName     (SQLite3StatementRef 
 #pragma Resultsets
 
 CFIndex           SQLite3StatementGetColumnCount               (SQLite3StatementRef statement);
-SQLite3Type       SQLite3StatementGetColumnType                (SQLite3StatementRef statement, CFIndex index);
+SQLite3ColumnType SQLite3StatementGetColumnType                (SQLite3StatementRef statement, CFIndex index);
 
 CFIndex           SQLite3StatementGetIntegerWithColumn         (SQLite3StatementRef statement, CFIndex index);
 int32_t           SQLite3StatementGetInt32WithColumn           (SQLite3StatementRef statement, CFIndex index);
