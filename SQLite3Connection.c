@@ -13,7 +13,7 @@
 #pragma Lifecycle
 
 inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, SQLite3OpenOptions flags, const char *zVfs) {
-  SQLite3ConnectionRef connection = CFAllocatorAllocate(allocator, sizeof(SQLite3ConnectionRef), 0);
+  SQLite3ConnectionRef connection = CFAllocatorAllocate(allocator, sizeof(SQLite3Connection), 0);
   if (connection) {
     connection->allocator = allocator ? CFRetain(allocator) : NULL;
     connection->retainCount = 1;
@@ -403,13 +403,15 @@ inline bool SQLite3ConnectionRemoveUpdateCallback(SQLite3ConnectionRef connectio
   if (connection && callback) {
     
     // TODO: critial section
-    for (int i = 0; i < connection->__updateCallbacksWithUserInfoCount; i++) {
-      if (connection->__updateCallbacksWithUserInfo[i].callback == callback && connection->__updateCallbacksWithUserInfo[i].userInfo == userInfo) {
-        CFIndex n = --connection->__updateCallbacksWithUserInfoCount;
-        connection->__updateCallbacksWithUserInfo[i].callback = connection->__updateCallbacksWithUserInfo[n].callback;
-        connection->__updateCallbacksWithUserInfo[i].userInfo = connection->__updateCallbacksWithUserInfo[n].userInfo;
-        success = 1;
-        break;
+    if (connection->__updateCallbacksWithUserInfoCount > 0) {
+      for (int i = 0; i < connection->__updateCallbacksWithUserInfoCount; i++) {
+        if (connection->__updateCallbacksWithUserInfo[i].callback == callback && connection->__updateCallbacksWithUserInfo[i].userInfo == userInfo) {
+          CFIndex n = --connection->__updateCallbacksWithUserInfoCount;
+          connection->__updateCallbacksWithUserInfo[i].callback = connection->__updateCallbacksWithUserInfo[n].callback;
+          connection->__updateCallbacksWithUserInfo[i].userInfo = connection->__updateCallbacksWithUserInfo[n].userInfo;
+          success = 1;
+          break;
+        }
       }
     }
     

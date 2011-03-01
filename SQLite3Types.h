@@ -62,8 +62,8 @@ typedef enum SQLite3OpenOptions {
   kSQLite3OpenNoMutex           = SQLITE_OPEN_NOMUTEX,        // 0x00008000 Ok for sqlite3_open_v2()
   kSQLite3OpenFullMutex         = SQLITE_OPEN_FULLMUTEX,      // 0x00010000 Ok for sqlite3_open_v2()
   kSQLite3OpenSharedCache       = SQLITE_OPEN_SHAREDCACHE,    // 0x00020000 Ok for sqlite3_open_v2()
-  kSQLite3OpenPrivateCache      = SQLITE_OPEN_PRIVATECACHE,   // 0x00040000 Ok for sqlite3_open_v2()
-  kSQLite3OpenWAL               = SQLITE_OPEN_WAL             // 0x00080000 VFS only
+  kSQLite3OpenPrivateCache      = SQLITE_OPEN_PRIVATECACHE    // 0x00040000 Ok for sqlite3_open_v2()
+//  kSQLite3OpenWAL               = SQLITE_OPEN_WAL             // 0x00080000 VFS only
 } SQLite3OpenOptions;
 
 typedef enum SQLite3Action {
