@@ -11,22 +11,25 @@
 #pragma Lifecycle
 
 inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error) {
-  SQLite3StatementRef statement = CFAllocatorAllocate(allocator, sizeof(SQLite3Statement), 0);
-  if (statement) {
-    statement->connection = SQLite3ConnectionRetain(connection);   // Let's retain connection
-    statement->allocator = allocator ? CFRetain(allocator) : NULL; // ...and allocator if not null
-    statement->retainCount = 1;
-    statement->stmt = NULL;
-    __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringMake(statement->allocator, sql);
-    SQLite3Status status = sqlite3_prepare_v2(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), -1, &statement->stmt, NULL);
-    if (kSQLite3StatusOK != status) {
-      if (error) {
-        *error = CFErrorCreate(allocator, CFSTR("com.github.mirek.SQLite3"), status, NULL);
+  SQLite3StatementRef statement = NULL;
+  if (connection && sql) {
+    statement = CFAllocatorAllocate(allocator, sizeof(SQLite3Statement), 0);
+    if (statement) {
+      statement->connection = SQLite3ConnectionRetain(connection);   // Let's retain connection
+      statement->allocator = allocator ? CFRetain(allocator) : NULL; // ...and allocator if not null
+      statement->retainCount = 1;
+      statement->stmt = NULL;
+      __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringMake(statement->allocator, sql);
+      SQLite3Status status = sqlite3_prepare_v2(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), -1, &statement->stmt, NULL);
+      if (kSQLite3StatusOK != status) {
+        if (error) {
+          *error = CFErrorCreate(allocator, CFSTR("com.github.mirek.SQLite3"), status, NULL);
+        }
+        printf("ERROR: %s\n", sqlite3_errmsg(connection->db));
+        statement = SQLite3StatementRelease(statement); // ...will be set to NULL
       }
-      printf("ERROR: %s\n", sqlite3_errmsg(connection->db));
-      statement = SQLite3StatementRelease(statement); // ...will be set to NULL
+      __SQLite3UTF8StringDestroy(utf8Sql);
     }
-    __SQLite3UTF8StringDestroy(utf8Sql);
   }
   return statement;
 }
@@ -184,6 +187,10 @@ inline SQLite3Status SQLite3StatementBindString(SQLite3StatementRef statement, C
     status = SQLite3StatementBindNULL(statement, index);
   }
   return status;
+}
+
+inline SQLite3Status SQLite3StatementBindStringWithName(SQLite3StatementRef statement, CFStringRef name, CFStringRef value) {
+  return SQLite3StatementBindString(statement, SQLite3StatementGetBindParameterIndexWithName(statement, name), value);
 }
 
 inline SQLite3Status SQLite3StatementBindPropertyList(SQLite3StatementRef statement, CFIndex index, CFPropertyListRef value, CFPropertyListFormat format) {

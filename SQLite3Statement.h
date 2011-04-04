@@ -41,6 +41,7 @@ SQLite3Status SQLite3StatementBindNumber                       (SQLite3Statement
 SQLite3Status SQLite3StatementBindDouble                       (SQLite3StatementRef statement, CFIndex     index, double_t    value);
 SQLite3Status SQLite3StatementBindNULL                         (SQLite3StatementRef statement, CFIndex     index);
 SQLite3Status SQLite3StatementBindString                       (SQLite3StatementRef statement, CFIndex     index, CFStringRef value);
+SQLite3Status SQLite3StatementBindStringWithName               (SQLite3StatementRef statement, CFStringRef name,  CFStringRef value);
 SQLite3Status SQLite3StatementBindData                         (SQLite3StatementRef statement, CFIndex     index, CFDataRef   value);
 CFIndex       SQLite3StatementGetBindParameterIndexWithName    (SQLite3StatementRef statement, CFStringRef name);
 CFIndex       SQLite3StatementGetBindParameterCount            (SQLite3StatementRef statement);
