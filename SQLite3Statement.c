@@ -177,6 +177,10 @@ inline SQLite3Status SQLite3StatementBindNULL(SQLite3StatementRef statement, CFI
   return sqlite3_bind_null(statement->stmt, (int)index);
 }
 
+inline SQLite3Status SQLite3StatementBindNULLWithName(SQLite3StatementRef statement, CFStringRef name) {
+  return SQLite3StatementBindNULL(statement, SQLite3StatementGetBindParameterIndexWithName(statement, name));
+}
+
 inline SQLite3Status SQLite3StatementBindString(SQLite3StatementRef statement, CFIndex index, CFStringRef value) {
   SQLite3Status status = kSQLite3StatusError;
   if (value) {
