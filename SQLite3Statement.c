@@ -148,13 +148,17 @@ inline CFStringRef SQLite3StatementCreateBindParameterNameWithIndex(SQLite3State
   return name;
 }
 
-inline SQLite3Status SQLite3StatementBindData(SQLite3StatementRef statement, CFIndex index, CFDataRef data) {
+inline SQLite3Status SQLite3StatementBindData(SQLite3StatementRef statement, CFIndex index, CFDataRef value) {
   int result;
-  if (data)
-    result = sqlite3_bind_blob(statement->stmt, (int)index, CFDataGetBytePtr(data), (int)CFDataGetLength(data), SQLITE_TRANSIENT);
+  if (value)
+    result = sqlite3_bind_blob(statement->stmt, (int)index, CFDataGetBytePtr(value), (int)CFDataGetLength(value), SQLITE_TRANSIENT);
   else
     result = SQLite3StatementBindNULL(statement, index);
   return result;
+}
+
+inline SQLite3Status SQLite3StatementBindDataWithName(SQLite3StatementRef statement, CFStringRef name, CFDataRef value) {
+  return SQLite3StatementBindData(statement, SQLite3StatementGetBindParameterIndexWithName(statement, name), value);
 }
 
 inline SQLite3Status SQLite3StatementBindDouble(SQLite3StatementRef statement, CFIndex index, double_t value) {

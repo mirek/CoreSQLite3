@@ -44,6 +44,8 @@ SQLite3Status SQLite3StatementBindNULLWithName                 (SQLite3Statement
 SQLite3Status SQLite3StatementBindString                       (SQLite3StatementRef statement, CFIndex     index, CFStringRef value);
 SQLite3Status SQLite3StatementBindStringWithName               (SQLite3StatementRef statement, CFStringRef name,  CFStringRef value);
 SQLite3Status SQLite3StatementBindData                         (SQLite3StatementRef statement, CFIndex     index, CFDataRef   value);
+SQLite3Status SQLite3StatementBindDataWithName                 (SQLite3StatementRef statement, CFStringRef name,  CFDataRef   value);
+
 CFIndex       SQLite3StatementGetBindParameterIndexWithName    (SQLite3StatementRef statement, CFStringRef name);
 CFIndex       SQLite3StatementGetBindParameterCount            (SQLite3StatementRef statement);
 CFStringRef   SQLite3StatementCreateBindParameterNameWithIndex (SQLite3StatementRef statement, CFIndex index, bool withoutLeadingCharacter);
