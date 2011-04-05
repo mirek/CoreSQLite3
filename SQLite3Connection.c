@@ -216,6 +216,10 @@ inline int64_t SQLite3ConnectionGetInt64WithQuery(SQLite3ConnectionRef connectio
   return value;
 }
 
+inline int64_t SQLite3ConnectionGetLastInsertedRowId(SQLite3ConnectionRef connection) {
+  return SQLite3ConnectionGetInt64WithQuery(connection, CFSTR("select last_insert_rowid()"));
+}
+
 inline bool SQLite3ConnectionGetBOOLWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
   bool value = 0;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
