@@ -95,13 +95,24 @@ inline SQLite3ConnectionRef SQLite3ConnectionRetain(SQLite3ConnectionRef connect
 // doesn't have an error. Otherwise return the error.
 CFErrorRef SQLite3ConnectionCreateError(SQLite3ConnectionRef connection) {
   CFErrorRef error = NULL;
-  if (SQLite3ConnectionHasError(connection)) {
-    const char *errmsg = connection ? sqlite3_errmsg(connection->db) : "Connection has not been allocated";
-    int errcode = connection ? sqlite3_errcode(connection->db) : kSQLite3StatusError;
+  CFAllocatorRef allocator = NULL;
+  const char *errmsg = NULL;
+  int errcode = kSQLite3StatusOK;
+  if (connection == NULL) {
+    errmsg = "SQLite3ConnectionRef not allocated";
+    errcode = kSQLite3StatusError;
+  } else {
+    allocator = connection->allocator;
+    if (SQLite3ConnectionHasError(connection)) {
+      errmsg = sqlite3_errmsg(connection->db);
+      errcode = sqlite3_errcode(connection->db);
+    }
+  }
+  if (errmsg) {
     CFStringRef keys[1] = { kCFErrorLocalizedDescriptionKey };
-    CFStringRef values[1] = { CFStringCreateWithCString(connection->allocator, errmsg, kCFStringEncodingUTF8) };
-    CFDictionaryRef userInfo = CFDictionaryCreate(connection->allocator, (void *)keys, (void *)values, 1, &kCFCopyStringDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    error = CFErrorCreate(connection->allocator, CFSTR("com.github.mirek.CoreSQLite3"), errcode, userInfo);
+    CFStringRef values[1] = { CFStringCreateWithCString(allocator, errmsg, kCFStringEncodingUTF8) };
+    CFDictionaryRef userInfo = CFDictionaryCreate(allocator, (void *)keys, (void *)values, 1, &kCFCopyStringDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    error = CFErrorCreate(allocator, CFSTR("com.github.mirek.CoreSQLite3"), errcode, userInfo);
     CFRelease(userInfo);
     CFRelease(values[0]);
   }
@@ -114,7 +125,7 @@ inline SQLite3Status SQLite3ConnectionGetStatus(SQLite3ConnectionRef connection)
 
 // If the connection is NULL or sqlite3 connection has an error, return YES. Otherwise return NO.
 inline bool SQLite3ConnectionHasError(SQLite3ConnectionRef connection) {
-  return connection ? sqlite3_errcode(connection->db) != SQLITE_OK : 1;
+  return connection == NULL ? 1 : sqlite3_errcode(connection->db) != kSQLite3StatusOK;
 }
 
 // Return NULL if the connection is not allocated. Otherwise return sqlite3 connection.
