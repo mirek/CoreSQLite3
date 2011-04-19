@@ -42,6 +42,32 @@ inline SQLite3StatementRef SQLite3StatementCreate(SQLite3ConnectionRef connectio
   return SQLite3StatementCreateWithError(connection, sql, NULL);
 }
 
+inline SQLite3StatementRef SQLite3StatementCreateWithBundleResource(SQLite3ConnectionRef connection, CFBundleRef bundle, CFStringRef type, CFStringRef name, CFStringRef subdir) {
+  SQLite3StatementRef statement = NULL;
+  if (connection) {
+    SInt32 errorCode = 0;
+    CFDictionaryRef properties = NULL;
+    CFDataRef data = NULL;
+    CFURLRef url = CFBundleCopyResourceURL(bundle, name, type, subdir);
+    if (url) {
+      if (CFURLCreateDataAndPropertiesFromResource(connection->allocator, url, &data, &properties, NULL, &errorCode)) {
+        CFStringRef sql = CFStringCreateWithBytes(connection->allocator, CFDataGetBytePtr(data), CFDataGetLength(data), kCFStringEncodingUTF8, 0);
+        if (sql) {
+          statement = SQLite3StatementCreate(connection, sql);
+          CFRelease(sql);
+        }
+        CFRelease(data);
+        if (properties)
+          CFRelease(properties);
+      } else {
+        // TODO: Error
+      }
+      CFRelease(url);
+    }
+  }
+  return statement;
+}
+
 inline SQLite3StatementRef SQLite3StatementRetain(SQLite3StatementRef statement) {
   statement->retainCount++;
   return statement;
@@ -368,6 +394,10 @@ inline bool SQLite3StatementGetBOOLWithColumn(SQLite3StatementRef statement, CFI
 
 inline CFStringRef SQLite3StatementCreateStringWithColumn(SQLite3StatementRef statement, CFIndex index) {
   return CFStringCreateWithBytes(statement->allocator, sqlite3_column_text(statement->stmt, (int)index), sqlite3_column_bytes(statement->stmt, (int)index), kCFStringEncodingUTF8, 0);
+}
+
+inline CFStringRef SQLite3StatementCreateStringWithColumnName(SQLite3StatementRef statement, CFStringRef name) {
+  return SQLite3StatementCreateStringWithColumn(statement, SQLite3StatementGetColumnIndexWithName(statement, name));
 }
 
 inline CFDataRef SQLite3StatementCreateDataWithColumn(SQLite3StatementRef statement, CFIndex index) {

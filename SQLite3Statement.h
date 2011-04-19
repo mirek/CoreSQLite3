@@ -17,6 +17,7 @@ const char *_SQLite3CreateValuesPlaceholderCString(CFAllocatorRef allocator, CFI
 SQLite3StatementRef _SQLite3StatementCreate          (CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error);
 SQLite3StatementRef  SQLite3StatementCreateWithError (SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error);
 SQLite3StatementRef  SQLite3StatementCreate          (SQLite3ConnectionRef connection, CFStringRef sql);
+SQLite3StatementRef  SQLite3StatementCreateWithBundleResource (SQLite3ConnectionRef connection, CFBundleRef bundle, CFStringRef type, CFStringRef name, CFStringRef subdir);
 SQLite3StatementRef  SQLite3StatementRetain          (SQLite3StatementRef statement);
 SQLite3StatementRef  SQLite3StatementRelease         (SQLite3StatementRef statement);
 SQLite3Status        SQLite3StatementFinalize        (SQLite3StatementRef statement);
@@ -71,6 +72,7 @@ int32_t           SQLite3StatementGetInt32WithColumn           (SQLite3Statement
 int64_t           SQLite3StatementGetInt64WithColumn           (SQLite3StatementRef statement, CFIndex index);
 bool              SQLite3StatementGetBOOLWithColumn            (SQLite3StatementRef statement, CFIndex index);
 CFStringRef       SQLite3StatementCreateStringWithColumn       (SQLite3StatementRef statement, CFIndex index);
+CFStringRef       SQLite3StatementCreateStringWithColumnName   (SQLite3StatementRef statement, CFStringRef name);
 CFDataRef         SQLite3StatementCreateDataWithColumn         (SQLite3StatementRef statement, CFIndex index);
 CFDateRef         SQLite3StatementCreateDateWithColumn         (SQLite3StatementRef statement, CFIndex index);
 CFPropertyListRef SQLite3StatementCreatePropertyListWithColumn (SQLite3StatementRef statement, CFIndex index, CFOptionFlags options, CFPropertyListFormat *format);
