@@ -8,12 +8,17 @@
 
 #import "Tests.h"
 
+void TestUpdateCallbackCallback1(SQLite3ConnectionRef connection, SQLite3Action action, CFStringRef table, sqlite3_int64 rowId, void *userInfo) {
+  *(bool *)userInfo = 1;
+}
+
 @implementation Tests
 
 - (void) setUp {
   [super setUp];
   allocator = TestAllocatorCreate();
-  connection = SQLite3ConnectionCreate(allocator, CFSTR("/Users/Mirek/my.db"), SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE, NULL);
+  connection = SQLite3ConnectionCreate(allocator, CFSTR("/Users/Mirek/my.db"), kSQLite3OpenCreate | kSQLite3OpenReadWrite, NULL);
+  SQLite3ConnectionSetBusyTimeout(connection, 3.0);
   STAssertTrue(connection != NULL, @"Connection should be allocated");
   STAssertFalse(SQLite3ConnectionHasError(connection), @"Connection should't have errors, but got '%s'", sqlite3_errmsg(connection->db));
 }
@@ -54,6 +59,40 @@
   }
 }
 
+- (void) testMigrations {
+  NSBundle *bundle = [NSBundle bundleForClass: [Tests class]];
+  NSString *resourcePath = [bundle resourcePath];
+  NSString *migrationsPath = [resourcePath stringByAppendingPathComponent: @"Migrations"];
+  NSURL *migrationsURL = [NSURL fileURLWithPath: migrationsPath];
+  SQLite3MigrationMigrateWithDirectoryURL(connection, (CFURLRef)migrationsURL);
+}
+
+- (void) testUpdateCallback {
+  SQLite3ConnectionExecute(connection, CFSTR("create table test_update_callback(id int primary key, name string)"));
+  
+  bool didInvoke = 0;
+  
+//  SQLite3ObserverRef observer = SQLite3ConnectionCreateObserver(connection, kSQLite3ActionInsert | kSQLite3ActionUpdate | kSQLite3ActionDelete);
+//  
+//  SQLite3ObserverSetBlock(observer, ^(SQLite3Action action, CFStringRef table, sqlite3_int64 rowId) {
+//    if (CFStringCompare(CFSTR("test_update_callback"), table, 0)) {
+//      NSLog(@"Change of %lld", rowId);
+//    }
+//  });
+//  
+//  SQLite3ObserverRelease(observer);
+  
+  SQLite3ConnectionAppendUpdateCallback(connection, TestUpdateCallbackCallback1, &didInvoke);
+  
+  STAssertFalse(didInvoke, @"Should't yet invoke callback");
+  SQLite3ConnectionExecute(connection, CFSTR("insert into test_update_callback(id, name) values(1, 'mirek')"));
+  STAssertTrue(didInvoke, @"Should invoke callback");
+
+  //SQLite3ConnectionRemoveUpdateCallback(connection, TestUpdateCallbackCallback1);
+
+  SQLite3ConnectionDropTable(connection, CFSTR("test_update_callback"));
+}
+
 - (void) testCreateUsersTable {
   NSError *error = nil;
   
@@ -90,16 +129,18 @@
     if (kSQLite3StatusDone != SQLite3StatementStep(statement)) {
       STAssertTrue(NO, @"Insert should return done");
     }
+    SQLite3StatementReset(statement);
     SQLite3StatementClearBindings(statement);
     SQLite3StatementFinalize(statement);
     SQLite3StatementRelease(statement);
     
     STAssertEquals(1, SQLite3ConnectionGetInt32WithQuery(connection, CFSTR("select count(*) from users where data is not null")), @"Should be one user with data");
-    CFPropertyListRef propertyList = SQLite3ConnectionCreatePropertyListWithQuery(connection, CFSTR("select data from users where data is not null"), kCFPropertyListImmutable, NULL, NULL);
+    CFPropertyListRef propertyList = SQLite3ConnectionCreatePropertyListWithQuery(connection, CFSTR("select data from users where data is not null"), kCFPropertyListImmutable, NULL);
     STAssertNotNil(propertyList, @"Property list shouldn't be nil");
     CFRelease(propertyList);
   }
   
+  SQLite3ConnectionDropTableIfExists(connection, CFSTR("users"));
   
   [user release];
   
