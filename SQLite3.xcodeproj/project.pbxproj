@@ -20,7 +20,7 @@
 		EB3B04831312C616009FDDA1 /* CoreSQLite3UTF8String.c in Sources */ = {isa = PBXBuildFile; fileRef = EB3B04801312C615009FDDA1 /* CoreSQLite3UTF8String.c */; };
 		EB3B04841312C616009FDDA1 /* CoreSQLite3UTF8String.c in Sources */ = {isa = PBXBuildFile; fileRef = EB3B04801312C615009FDDA1 /* CoreSQLite3UTF8String.c */; };
 		EB3B04851312C616009FDDA1 /* CoreSQLite3UTF8String.h in Headers */ = {isa = PBXBuildFile; fileRef = EB3B04811312C616009FDDA1 /* CoreSQLite3UTF8String.h */; };
-		EB3B04861312C616009FDDA1 /* CoreSQLite3UTF8String.h in Headers */ = {isa = PBXBuildFile; fileRef = EB3B04811312C616009FDDA1 /* CoreSQLite3UTF8String.h */; };
+		EB3B04861312C616009FDDA1 /* CoreSQLite3UTF8String.h in Headers */ = {isa = PBXBuildFile; fileRef = EB3B04811312C616009FDDA1 /* CoreSQLite3UTF8String.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		EB3B04881312CD3A009FDDA1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB3B04871312CD3A009FDDA1 /* Cocoa.framework */; };
 		EB3B04891312CD43009FDDA1 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB3B04661312BEB5009FDDA1 /* CoreFoundation.framework */; };
 		EB3B048C1312CD88009FDDA1 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = EB0C651F1312A20300F18BB6 /* sqlite3.c */; };
