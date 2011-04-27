@@ -388,6 +388,10 @@ inline int64_t SQLite3StatementGetInt64WithColumn(SQLite3StatementRef statement,
   return (int64_t)sqlite3_column_int64(statement->stmt, (int)index);
 }
 
+inline double_t SQLite3StatementGetDoubleWithColumn(SQLite3StatementRef statement, CFIndex index) {
+  return (double_t)sqlite3_column_double(statement->stmt, (int)index);
+}
+
 inline bool SQLite3StatementGetBOOLWithColumn(SQLite3StatementRef statement, CFIndex index) {
   return sqlite3_column_int(statement->stmt, (int)index) != 0;
 }

@@ -70,6 +70,7 @@ SQLite3ColumnType SQLite3StatementGetColumnType                (SQLite3Statement
 CFIndex           SQLite3StatementGetIntegerWithColumn         (SQLite3StatementRef statement, CFIndex index);
 int32_t           SQLite3StatementGetInt32WithColumn           (SQLite3StatementRef statement, CFIndex index);
 int64_t           SQLite3StatementGetInt64WithColumn           (SQLite3StatementRef statement, CFIndex index);
+double_t          SQLite3StatementGetDoubleWithColumn          (SQLite3StatementRef statement, CFIndex index);
 bool              SQLite3StatementGetBOOLWithColumn            (SQLite3StatementRef statement, CFIndex index);
 CFStringRef       SQLite3StatementCreateStringWithColumn       (SQLite3StatementRef statement, CFIndex index);
 CFStringRef       SQLite3StatementCreateStringWithColumnName   (SQLite3StatementRef statement, CFStringRef name);
