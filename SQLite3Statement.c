@@ -8,7 +8,7 @@
 
 #include "SQLite3Statement.h"
 
-#pragma Lifecycle
+#pragma mark Lifecycle
 
 inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error) {
   SQLite3StatementRef statement = NULL;
@@ -150,7 +150,7 @@ inline CFIndex SQLite3StatementGetColumnIndexWithName(SQLite3StatementRef statem
   return index;
 }
 
-#pragma Binding
+#pragma mark Bindings
 
 inline CFIndex SQLite3StatementGetBindParameterIndexWithName(SQLite3StatementRef statement, CFStringRef name) {
   int index = 0;
@@ -241,7 +241,7 @@ inline SQLite3Status SQLite3StatementBindPropertyListWithName(SQLite3StatementRe
   return SQLite3StatementBindPropertyList(statement, SQLite3StatementGetBindParameterIndexWithName(statement, name), value, format);
 }
 
-#pragma Extra binding functions
+#pragma mark Extra binding functions
 
 inline SQLite3Status SQLite3StatementBindNumber(SQLite3StatementRef statement, CFIndex index, CFNumberRef value) {
   SQLite3Status status = kSQLite3StatusError;
@@ -366,7 +366,7 @@ inline SQLite3Status SQLite3StatementBindDictionary(SQLite3StatementRef statemen
   return status;
 }
 
-#pragma Resultsets
+#pragma mark Resultsets
 
 inline CFIndex SQLite3StatementGetColumnsCount(SQLite3StatementRef statement) {
   return sqlite3_column_count(statement->stmt);
@@ -376,24 +376,36 @@ inline SQLite3ColumnType SQLite3StatementGetColumnType(SQLite3StatementRef state
   return sqlite3_column_type(statement->stmt, (int)index);
 }
 
-inline CFIndex SQLite3StatementGetIntegerWithColumn(SQLite3StatementRef statement, CFIndex index) {
-  return (CFIndex)sqlite3_column_int(statement->stmt, (int)index);
-}
-
 inline int32_t SQLite3StatementGetInt32WithColumn(SQLite3StatementRef statement, CFIndex index) {
   return (int32_t)sqlite3_column_int(statement->stmt, (int)index);
+}
+
+inline int32_t SQLite3StatementGetInt32WithColumnName(SQLite3StatementRef statement, CFStringRef name) {
+  return SQLite3StatementGetInt32WithColumn(statement, SQLite3StatementGetColumnIndexWithName(statement, name));
 }
 
 inline int64_t SQLite3StatementGetInt64WithColumn(SQLite3StatementRef statement, CFIndex index) {
   return (int64_t)sqlite3_column_int64(statement->stmt, (int)index);
 }
 
+inline int64_t SQLite3StatementGetInt64WithColumnName(SQLite3StatementRef statement, CFStringRef name) {
+  return SQLite3StatementGetInt64WithColumn(statement, SQLite3StatementGetColumnIndexWithName(statement, name));
+}
+
 inline double_t SQLite3StatementGetDoubleWithColumn(SQLite3StatementRef statement, CFIndex index) {
   return (double_t)sqlite3_column_double(statement->stmt, (int)index);
 }
 
+inline double_t SQLite3StatementGetDoubleWithColumnName(SQLite3StatementRef statement, CFStringRef name) {
+  return SQLite3StatementGetDoubleWithColumn(statement, SQLite3StatementGetColumnIndexWithName(statement, name));
+}
+
 inline bool SQLite3StatementGetBOOLWithColumn(SQLite3StatementRef statement, CFIndex index) {
   return sqlite3_column_int(statement->stmt, (int)index) != 0;
+}
+
+inline bool SQLite3StatementGetBOOLWithColumnName(SQLite3StatementRef statement, CFStringRef name) {
+  return SQLite3StatementGetBOOLWithColumn(statement, SQLite3StatementGetColumnIndexWithName(statement, name));
 }
 
 inline CFStringRef SQLite3StatementCreateStringWithColumn(SQLite3StatementRef statement, CFIndex index) {
@@ -406,6 +418,10 @@ inline CFStringRef SQLite3StatementCreateStringWithColumnName(SQLite3StatementRe
 
 inline CFDataRef SQLite3StatementCreateDataWithColumn(SQLite3StatementRef statement, CFIndex index) {
   return CFDataCreate(statement->allocator, sqlite3_column_blob(statement->stmt, (int)index), sqlite3_column_bytes(statement->stmt, (int)index));
+}
+
+inline CFDataRef SQLite3StatementCreateDataWithColumnName(SQLite3StatementRef statement, CFStringRef name) {
+  return SQLite3StatementCreateDataWithColumn(statement, SQLite3StatementGetColumnIndexWithName(statement, name));
 }
 
 inline CFDateRef SQLite3StatementCreateDateWithColumn(SQLite3StatementRef statement, CFIndex index) {
@@ -435,6 +451,11 @@ inline CFDateRef SQLite3StatementCreateDateWithColumn(SQLite3StatementRef statem
   return date;
 }
 
+inline CFDateRef SQLite3StatementCreateDateWithColumnName(SQLite3StatementRef statement, CFStringRef name) {
+  return SQLite3StatementCreateDateWithColumn(statement, SQLite3StatementGetColumnIndexWithName(statement, name));
+}
+
+
 //inline CGImageRef SQLite3StatementCreateImageWithColumn(SQLite3StatementRef statement, NSInteger index) {
 //  CGImageRef image = NULL;
 //  CFDataRef data = SQLite3StatementCreateDataWithColumn(statement, index);
@@ -446,6 +467,11 @@ inline CFDateRef SQLite3StatementCreateDateWithColumn(SQLite3StatementRef statem
 //  }
 //  return image;
 //}
+
+inline CFArrayRef SQLite3StatementCreateArrayWithAllColumns(SQLite3StatementRef statement) {
+  // TODO: implement SQLite3StatementCreateArrayWithAllColumns
+  return NULL;
+}
 
 inline CFDictionaryRef SQLite3StatementCreateDictionaryWithAllColumns(SQLite3StatementRef statement) {
   CFDictionaryRef dictionary = NULL;
@@ -482,13 +508,14 @@ inline CFPropertyListRef SQLite3StatementCreatePropertyListWithColumn(SQLite3Sta
   return result;
 }
 
-#pragma Resultsets with column name
+#pragma mark Resultsets with column name
 
 //inline CGImageRef SQLite3StatementCreateImageWithColumnName(SQLite3StatementRef statement, CFStringRef name) {
 //  return SQLite3StatementCreateImageWithColumn(statement, SQLite3StatementGetColumnIndexWithName(statement, name));
 //}
 
-// Helper function used to create "?,?,...\0" value placeholders.
+// Helper function used to create "?,?,...\0" cstring value placeholders.
+// TODO: Rename to SQLite3CreateCStringValuePlaceholdersWithCount(...)
 inline const char *_SQLite3CreateValuesPlaceholderCString(CFAllocatorRef allocator, CFIndex n) {
   char *s = CFAllocatorAllocate(allocator, 2 * n, 0);
   for (CFIndex i = 0; i < n * 2; i += 2) {
@@ -505,7 +532,6 @@ inline const char *_SQLite3CreateValuesPlaceholderCString(CFAllocatorRef allocat
 //inline CFDataRef   SQLite3ConnectionCreateData   (SQLite3ConnectionRef connection, CFStringRef sql);
 //inline CGImageRef  SQLite3ConnectionCreateImage  (SQLite3ConnectionRef connection, CFStringRef sql);
 
-
 // Insert values into the table from a CFDictionary.
 //
 // If the number of key-values pairs in the dictionary is zero, insert is ignored.
@@ -520,7 +546,7 @@ inline const char *_SQLite3CreateValuesPlaceholderCString(CFAllocatorRef allocat
 // TODO:
 // - sanitize table name and keys
 // - return values for binding
-inline SQLite3Status SQLite3InsertWithDictionary(SQLite3ConnectionRef connection, CFStringRef table, CFDictionaryRef dictionary) {
+inline SQLite3Status SQLite3InsertWithTableNameAndDictionary(SQLite3ConnectionRef connection, CFStringRef table, CFDictionaryRef dictionary) {
   SQLite3Status status = kSQLite3StatusError;
   CFIndex n = CFDictionaryGetCount(dictionary);
   const void **keys = CFAllocatorAllocate(connection->allocator, sizeof(void *) * n, 0);

@@ -8,7 +8,7 @@
 
 #include "SQLite3Migration.h"
 
-#pragma Global stuff
+#pragma mark Global stuff
 
 // Migration files are using names with the following convention:
 // * file names ending with ".sql" are considered migration files
@@ -82,7 +82,7 @@ CFMutableArrayRef SQlite3MigrationCreateURLsArrayWithDirectoryURL(CFAllocatorRef
   return array;
 }
 
-#pragma Connection related stuff
+#pragma mark Connection related stuff
 
 // Return true if migration table (schema_migrations) exists, false otherwise.
 bool SQLite3MigrationDoesTableExist(SQLite3ConnectionRef connection) {

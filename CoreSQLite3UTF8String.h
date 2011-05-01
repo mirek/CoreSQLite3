@@ -1,13 +1,13 @@
 //
-// SQLite3Connection.c
-// CoreSQLite3 Framework
+// CoreSQLite3UTF8String.h
+// CoreSQLite3
 //
 // Created by Mirek Rusin on 21/02/2011.
 // Copyright 2011 Inteliv Ltd. All rights reserved.
 //
 
 #if !defined(__CORE_SQLITE3_UTF8STRING__)
-#define __CORE_SQLITE3_UTF8STRING__ 1
+#define      __CORE_SQLITE3_UTF8STRING__ 1
 
 #include <CoreFoundation/CoreFoundation.h>
 

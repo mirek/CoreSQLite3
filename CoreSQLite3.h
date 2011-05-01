@@ -26,6 +26,10 @@ extern "C" {
 #include "SQLite3Statement.h"
 #include "SQLite3Migration.h"
 
+#include "SQLite3ExtCrypto.h"
+#include "SQLite3ExtLogic.h"
+#include "SQLite3ExtMath.h"
+
 #ifdef __cplusplus
 }
 #endif

@@ -2,9 +2,7 @@
 
 ## Overview
 
-`CoreSQLite3` Framework is fast, `Core Foundation` oriented, `sqlite3` based framework written in C.
-
-`CoreSQLite3` works on iOS and OSX platforms.
+`CoreSQLite3` is `Core Foundation`, `sqlite3` based library for iOS and Mac OSX platforms.
 
 Toll-free bridging between `Core Foundation` and Objective-C allows `CoreSQLite3` framework to be used directly from Objective-C code.
 
@@ -27,7 +25,7 @@ Toll-free bridging between `Core Foundation` and Objective-C allows `CoreSQLite3
 
 Additional binding functions:
 
-#### Binding arrays and dictionaries
+#### Binding Arrays and Dictionaries
 
 SQLite3 supports the following format for parameter bindings:
 
@@ -40,11 +38,9 @@ Example queries:
 * `select * from users where username = ?1 and password = ?2 and (?1 <> ?2)`
 * `select * from users where username = :username and password = :password`
 
-#### Binding arrays of arrays and arrays of dictionaries
+#### Binding Multiple Arrays and Dictionaries
 
-#### Binding images
-
-#### Serializing values
+#### Serialized Columns
 
 SQLite3 supports automatic property list serialisation:
 
@@ -61,6 +57,8 @@ SQLite3 supports automatic property list serialisation:
 To retrieve serialised object graph back you can use `SQLite3StatementCreatePropertyListWithColumn` or connection's function:
 
     id preferences = SQLite3ConnectionCreatePropertyListWithQuery(connection, @"select data from users where id = 1");
+
+#### Binding images
 
 ### Backups
 
@@ -157,15 +155,20 @@ Typical usage:
 | `sqlite3_backup_remaining`       | `-`
 | `sqlite3_backup_step`            | `-`
 | `sqlite3_bind_blob`              | `SQLite3StatementBindData`
-| `-`                              | `SQLite3StatementBindImage`
+| `-`                              | `SQLite3StatementBindDataWithName`
 | `sqlite3_bind_double`            | `SQLite3StatementBindDouble`    
+| `-`                              | `SQLite3StatementBindDoubleWithName`
 | `sqlite3_bind_int`               | `SQLite3StatementBindInt32`   
+| `-`                              | `SQLite3StatementBindInt32WithName`
 | `sqlite3_bind_int64`             | `SQLite3StatementBindInt64`  
+| `-`                              | `SQLite3StatementBindInt64WithName`
 | `sqlite3_bind_null`              | `SQLite3StatementBindNULL`       
+| `-`                              | `SQLite3StatementBindNULLWithName`
 | `sqlite3_bind_parameter_count`   | `SQLite3StatementGetBindParameterCount`                                                                            
 | `sqlite3_bind_parameter_index`   | `SQLite3StatementGetBindParameterIndex`                                                                            
-| `sqlite3_bind_parameter_name`    | `SQLite3StatementCreateBindNameStringWithIndex`                                                                            
+| `sqlite3_bind_parameter_name`    | `SQLite3StatementCreateBindNameStringWithIndex`
 | `sqlite3_bind_text`              | `SQLite3StatementBindString`
+| `-`                              | `SQLite3StatementBindStringWithName`
 | `sqlite3_bind_text16`            | `-`                                                                            
 | `sqlite3_bind_value`             | `-`                                                                            
 | `sqlite3_bind_zeroblob`          | `-`

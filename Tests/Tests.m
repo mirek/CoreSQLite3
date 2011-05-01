@@ -19,6 +19,7 @@ void TestUpdateCallbackCallback1(SQLite3ConnectionRef connection, SQLite3Action 
   allocator = TestAllocatorCreate();
   connection = SQLite3ConnectionCreate(allocator, CFSTR("/Users/Mirek/my.db"), kSQLite3OpenCreate | kSQLite3OpenReadWrite, NULL);
   SQLite3ConnectionSetBusyTimeout(connection, 3.0);
+  SQLite3ExtRegisterAllFunctions(connection);
   STAssertTrue(connection != NULL, @"Connection should be allocated");
   STAssertFalse(SQLite3ConnectionHasError(connection), @"Connection should't have errors, but got '%s'", sqlite3_errmsg(connection->db));
 }
@@ -67,7 +68,19 @@ void TestUpdateCallbackCallback1(SQLite3ConnectionRef connection, SQLite3Action 
   SQLite3MigrationMigrateWithDirectoryURL(connection, (CFURLRef)migrationsURL);
 }
 
+- (void)  testExtensions {
+  STAssertEqualsWithAccuracy(1.0, SQLite3ConnectionGetDoubleWithQuery(connection, CFSTR("select sin(rad2deg(90))")), 0.000001, @"Sine")
+  {
+    CFStringRef r = SQLite3ConnectionCreateStringWithQuery(connection, CFSTR("select if(1 > 2, 'error', 'ok')"));
+    NSLog(@"if: %@", r);
+    CFRelease(r);
+  }
+  SQLite3ExtensionsMathUnregisterSin(connection);
+}
+
 - (void) testUpdateCallback {
+  
+  
   SQLite3ConnectionExecute(connection, CFSTR("create table test_update_callback(id int primary key, name string)"));
   
   bool didInvoke = 0;

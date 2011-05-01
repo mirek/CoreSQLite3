@@ -42,7 +42,12 @@ extern bool SQLite3ConnectionRemoveUpdateCallback       (SQLite3ConnectionRef co
 //typedef SQLite3ConnectionDefaultUpdateHook SQLite3ConnectionDefaultUpdateHook;
 //kSQLite3ConnectionDefaultUpdateHook;
 
-#pragma Resultset utility functions
+#pragma mark Function and aggregate registration
+
+SQLite3Status SQLite3ConnectionRegisterFunction   (SQLite3ConnectionRef connection, CFStringRef name, CFIndex argc, void (*f)(sqlite3_context *, int, sqlite3_value **));
+SQLite3Status SQLite3ConnectionUnregisterFunction (SQLite3ConnectionRef connection, CFStringRef name, CFIndex argc);
+
+#pragma mark Resultset utility functions
 
 SQLite3Status     SQLite3ConnectionExecuteWithContentsOfURL               (SQLite3ConnectionRef connection, CFURLRef url);
 
@@ -55,6 +60,7 @@ SQLite3Status     SQLite3ConnectionExecuteWithDictionaryBindings          (SQLit
 int32_t           SQLite3ConnectionGetInt32WithQuery                      (SQLite3ConnectionRef connection, CFStringRef sql);
 int64_t           SQLite3ConnectionGetInt64WithQuery                      (SQLite3ConnectionRef connection, CFStringRef sql);
 int64_t           SQLite3ConnectionGetLastInsertedRowId                   (SQLite3ConnectionRef connection);
+double_t          SQLite3ConnectionGetDoubleWithQuery                     (SQLite3ConnectionRef connection, CFStringRef sql);
 bool              SQLite3ConnectionGetBOOLWithQuery                       (SQLite3ConnectionRef connection, CFStringRef sql);
 CFStringRef       SQLite3ConnectionCreateStringWithQuery                  (SQLite3ConnectionRef connection, CFStringRef sql);
 CFDataRef         SQLite3ConnectionCreateDataWithQuery                    (SQLite3ConnectionRef connection, CFStringRef sql);

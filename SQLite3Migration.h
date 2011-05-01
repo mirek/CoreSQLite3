@@ -21,7 +21,7 @@ typedef enum {
   kSQLite3MigrationTypeUndoMigration
 } SQLite3MigrationType;
 
-#pragma Migration utility functions
+#pragma mark Migration utility functions
 
 SQLite3MigrationType SQLite3MigrationGetTypeWithPath                 (                          CFStringRef path);
 SQLite3MigrationType SQLite3MigrationGetTypeWithURL                  (                          CFURLRef    url);
@@ -34,7 +34,7 @@ SQLite3Status SQLite3MigrationCreateTableIfDoesntExist (SQLite3ConnectionRef con
 SQLite3Status SQLite3MigrationInsertVersion (SQLite3ConnectionRef connection, CFStringRef version);
 SQLite3Status SQLite3MigrationDeleteVersion (SQLite3ConnectionRef connection, CFStringRef version);
 
-#pragma Migration functionality
+#pragma mark Migration functionality
 
 SQLite3Status SQLite3MigrationExecuteWithContentsOfURL (SQLite3ConnectionRef connection, CFURLRef url);
 SQLite3Status SQLite3MigrationExecute                  (SQLite3ConnectionRef connection, CFStringRef version, CFStringRef sql);

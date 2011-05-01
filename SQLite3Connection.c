@@ -133,7 +133,23 @@ inline sqlite3 *SQLite3ConnectionGetConnection(SQLite3ConnectionRef connection) 
   return connection ? connection->db : NULL;
 }
 
-#pragma Resultset utility functions
+#pragma mark Function and aggregate registration
+
+SQLite3Status SQLite3ConnectionRegisterFunction(SQLite3ConnectionRef connection, CFStringRef name, CFIndex argc, void (*f)(sqlite3_context *, int, sqlite3_value **)) {
+  SQLite3Status status = kSQLite3StatusError;
+  if (connection) {
+    __SQLite3UTF8String utf8Name = __SQLite3UTF8StringMake(connection->allocator, name);
+    status = sqlite3_create_function_v2(connection->db, __SQLite3UTF8StringGetBuffer(utf8Name), (int)argc, SQLITE_ANY, NULL, f, NULL, NULL, NULL);
+    __SQLite3UTF8StringDestroy(utf8Name);
+  }
+  return status;
+}
+
+SQLite3Status SQLite3ConnectionUnregisterFunction(SQLite3ConnectionRef connection, CFStringRef name, CFIndex argc) {
+  return SQLite3ConnectionRegisterFunction(connection, name, argc, NULL);
+}
+
+#pragma mark Resultset utility functions
 
 inline SQLite3Status SQLite3ConnectionExecuteWithContentsOfURL(SQLite3ConnectionRef connection, CFURLRef url) {
   SQLite3Status status = kSQLite3StatusError;
@@ -221,6 +237,17 @@ inline int64_t SQLite3ConnectionGetInt64WithQuery(SQLite3ConnectionRef connectio
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
   if (kSQLite3StatusRow == SQLite3StatementStep(statement))
     value = SQLite3StatementGetInt64WithColumn(statement, 0);
+  SQLite3StatementReset(statement);
+  SQLite3StatementFinalize(statement);
+  SQLite3StatementRelease(statement);
+  return value;
+}
+
+inline double_t SQLite3ConnectionGetDoubleWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
+  double_t value = 0.0;
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+  if (kSQLite3StatusRow == SQLite3StatementStep(statement))
+    value = SQLite3StatementGetDoubleWithColumn(statement, 0);
   SQLite3StatementReset(statement);
   SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
