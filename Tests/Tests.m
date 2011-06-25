@@ -79,6 +79,11 @@ void TestUpdateCallbackCallback1(SQLite3ConnectionRef connection, SQLite3Action 
   [statement bindObject: @"table" withName: @":type"];
   for (id row in statement)
     NSLog(@"table name: %@", [row objectForKey: @"name"]);
+  
+  [connection enumerateWithQuery: @"select * from sqlite_master" usingBlock: ^(NSDictionary *row, BOOL *stop) {
+    NSLog(@"all: %@", [row objectForKey: @"name"]);
+  }];
+  
 }
 
 //- (void)  testExtensions {

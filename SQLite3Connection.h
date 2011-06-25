@@ -90,7 +90,7 @@ bool SQLite3ConnectionDoesTableOrViewExistWithName (SQLite3ConnectionRef connect
 - (SQLite3Statement *) createStatementWithQuery: (NSString *) sql NS_RETURNS_RETAINED;
 - (SQLite3Statement *) statementWithQuery: (NSString *) sql;
 
-- (SQLite3Status) enumerateWithQuery: (NSString *) sql usingBlock: (BOOL (^)(NSDictionary *row)) block;
+- (SQLite3Status) enumerateWithQuery: (NSString *) sql usingBlock: (void (^)(NSDictionary *row, BOOL *stop)) block;
 
 - (BOOL) boolWithQuery: (NSString *) sql;
 - (NSString *) createStringWithQuery: (NSString *) sql NS_RETURNS_RETAINED;

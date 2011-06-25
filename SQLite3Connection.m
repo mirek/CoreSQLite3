@@ -51,11 +51,13 @@
   return [[self createStatementWithQuery: sql] autorelease];
 }
 
-- (SQLite3Status) enumerateWithQuery: (NSString *) sql usingBlock: (BOOL (^)(NSDictionary *row)) block {
+- (SQLite3Status) enumerateWithQuery: (NSString *) sql usingBlock: (void (^)(NSDictionary *row, BOOL *stop)) block {
   SQLite3Status status = kSQLite3StatusOK;
   SQLite3Statement *statement = [self createStatementWithQuery: sql];
+  BOOL stop = NO;
   for (NSDictionary *row in statement) {
-    if (block(row)) {
+    block(row, &stop);
+    if (stop) {
       break;
     }
   }
