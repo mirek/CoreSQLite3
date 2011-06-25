@@ -1,9 +1,8 @@
 //
-//  Tests.h
-//  Tests
+// Tests.h
+// CoreSQLite3
 //
-//  Created by Mirek Rusin on 10/02/2011.
-//  Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #import <SenTestingKit/SenTestingKit.h>
@@ -13,7 +12,8 @@
 @interface Tests : SenTestCase {
 @private
   CFAllocatorRef allocator;
-  SQLite3ConnectionRef connection;
+  SQLite3ConnectionRef coreConnection;
+  SQLite3Connection *connection;
 }
 
 @end

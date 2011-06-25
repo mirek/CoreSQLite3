@@ -1,9 +1,8 @@
 //
 // SQLite3Types.h
-// CoreSQLite3 Framework
+// CoreSQLite3
 //
-// Created by Mirek Rusin on 08/02/2011.
-// Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #import "CoreSQLite3.h"
@@ -118,7 +117,7 @@ typedef struct __SQLite3UpdateCallbackWithUserInfo {
   void *userInfo;
 } __SQLite3CallbackWithUserInfo;
 
-typedef struct SQLite3Connection {
+typedef struct __SQLite3Connection {
   CFAllocatorRef     allocator;
   CFIndex            retainCount;
   sqlite3           *db;
@@ -126,20 +125,20 @@ typedef struct SQLite3Connection {
   
   CFIndex                                    __updateCallbacksWithUserInfoCount;
   struct __SQLite3UpdateCallbackWithUserInfo __updateCallbacksWithUserInfo[kSQLite3UpdateCallbacksMaxCount];
-} SQLite3Connection;
+} __SQLite3Connection;
 
-typedef SQLite3Connection* SQLite3ConnectionRef;
+typedef __SQLite3Connection* SQLite3ConnectionRef;
 
 typedef void (*SQLite3UpdateCallback)(SQLite3ConnectionRef connection, SQLite3Action action, CFStringRef table, sqlite3_int64 rowId, void *userInfo);
 
-typedef struct SQLite3Statement {
+typedef struct __SQLite3Statement {
   CFAllocatorRef       allocator;
   CFIndex              retainCount;
   sqlite3_stmt        *stmt;
   SQLite3ConnectionRef connection;
-} SQLite3Statement;
+} __SQLite3Statement;
 
-typedef SQLite3Statement *SQLite3StatementRef;
+typedef __SQLite3Statement *SQLite3StatementRef;
 
 typedef struct SQLite3Observer {
   CFAllocatorRef       allocator;

@@ -1,7 +1,3 @@
-//
-// Prefix header for all source files of the 'SQLite3' target in the 'SQLite3' project.
-//
-
 #ifdef __OBJC__
-    #import <CoreFoundation/CoreFoundation.h>
+#import <CoreFoundation/CoreFoundation.h>
 #endif

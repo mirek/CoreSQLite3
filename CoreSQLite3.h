@@ -1,13 +1,16 @@
 //
 // CoreSQLite3.h
-// CoreSQLite3 Framework
+// CoreSQLite3
 //
-// Created by Mirek Rusin on 07/02/2011.
-// Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #if !defined(__CORE_SQLITE3__)
 #define __CORE_SQLITE3__ 1
+
+#ifdef __OBJC__
+#import <Foundation/Foundation.h>
+#endif
 
 #include <CoreFoundation/CoreFoundation.h>
 #include "sqlite3.h"
@@ -17,18 +20,13 @@
 extern "C" {
 #endif
 
-// Internal
-#include "CoreSQLite3UTF8String.h"
-
 #include "SQLite3Types.h"
 #include "SQLite3Connection.h"
-#include "SQLite3ConnectionPool.h"
+
 #include "SQLite3Statement.h"
 #include "SQLite3Migration.h"
 
-#include "SQLite3ExtCrypto.h"
-#include "SQLite3ExtLogic.h"
-#include "SQLite3ExtMath.h"
+#include "SQLite3Ext.h"
 
 #ifdef __cplusplus
 }

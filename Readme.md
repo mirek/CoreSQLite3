@@ -2,9 +2,50 @@
 
 ## Overview
 
-`CoreSQLite3` is `Core Foundation`, `sqlite3` based library for iOS and Mac OSX platforms.
+`CoreSQLite3` is `sqlite3` library for iOS and Mac OSX platforms. It provides intuitive, `Core Foundation` based API for accessing and manipulating `sqlite3` databases.
 
-Toll-free bridging between `Core Foundation` and Objective-C allows `CoreSQLite3` framework to be used directly from Objective-C code.
+Toll-free bridging between `Core Foundation` and Objective-C Foundation allows `CoreSQLite3` framework to be used directly from Objective-C code.
+
+The framework includes amalgamation version of sqlite3 library. You can use this version of `sqlite3` or system provided `sqlite3.dylib` on iOS and Mac OSX.
+
+You may want to use included `sqlite3-amalgamation` version of the library because of the following reasons:
+
+* it provides the latest version of sqlite3 library
+* includes FTS3 (full text search) extension
+* includes R*Tree extension for fast range and geo-spatial queries
+
+Additionally `CoreSQLite3` allows to register the following functions:
+
+* math extension
+  * `sin(radians)`
+  * `cos(radians)`
+  * `deg2rad(degrees)`
+  * `rad2deg(radians)`
+  * `pi()`
+
+* logic extension
+  * `if(condition, value_if_true, value_if_false)` -> null if condition is null or value_if_false when condition equals to zero, value_if_true otherwise
+
+* crypto extension
+  * `md5(value)` -> null if value is null, md5 hash string otherwise
+  * `sha1(value)` -> null if value is null, md5 hash string otherwise
+
+* spatial extension
+  * `lat_lng_dist_in_km(lat_1, long_2, lat_2, long_2)` -> float
+  * `lat_lng_dist_in_mi(lat_1, long_2, lat_2, long_2)` -> float
+
+In order to register one or more of the functions above call the following function(s) on open connection:
+
+* `SQLite3ExtRegisterAllFunctions` - to register all above functions
+* `SQLite3ExtMathRegisterAllFunctions` - to register all math functions
+* `SQLite3ExtLogicRegisterAllFunctions` - to register all math functions
+* `SQLite3ExtCryptoRegisterAllFunctions` - to register all math functions
+* `SQLite3ExtSpatialRegisterAllFunctions` - to register all math functions
+
+You can also register and unregister individual functions by calling:
+
+* `SQLite3ExtMathRegisterSinFunction`
+* `SQLite3ExtLogicUnregisterIfFunction`
 
 ## Functions by Task
 
@@ -20,10 +61,14 @@ Toll-free bridging between `Core Foundation` and Objective-C allows `CoreSQLite3
 ### Creating Statement
 
 `SQLite3StatementCreate`
+`SQLite3StatementFinalize`
 
 ### Binding
 
-Additional binding functions:
+`SQLite3StatementBindValue`
+`SQLite3StatementClearBindings`
+
+Return value `kSQLite3StatusOK` on success, `kSQLite3StatusError` otherwise.
 
 #### Binding Arrays and Dictionaries
 
@@ -38,11 +83,30 @@ Example queries:
 * `select * from users where username = ?1 and password = ?2 and (?1 <> ?2)`
 * `select * from users where username = :username and password = :password`
 
+Please note when binding values, the binding name should include `?`, `:` prefix. Example:
+
+    SQLite3StatementBindStringWithName(statement, CFSTR(':username'), CFSTR('mirek'));
+
 #### Binding Multiple Arrays and Dictionaries
 
 #### Serialized Columns
 
-SQLite3 supports automatic property list serialisation:
+`CoreSQLite3` provides the following function to simplify working with serialised columns (structured data stored in single value):
+
+* `SQLite3StatementBindPropertyList` - bind property list value, the value is serialised with the specified encoding
+* `SQLite3StatementCreatePropertyListWithColumn` or `SQLite3StatementCreatePropertyListWithColumnName` - get property list value by deserializing row data for specified column
+
+Serialised value can be one of:
+
+* CFData, CFString, CFArray, CFDictionary, CFDate, CFBoolean and CFNumber
+
+or one of their counterparts in Objective-C Foundation:
+
+* NSData, NSString, NSArray, NSDictionary, NSDate and NSNumber
+
+The type of column for serialised data should be `text` (for XML based serialisation) or `blob` (for binary based serialisation).
+
+Example usage:
 
     NSDictionary *preferences = [NSDictionary dictionaryWithObjectsAndKeys:
                                  [NSArray arrayWithObjects: @"English", @"German"], @"languages",
@@ -53,6 +117,10 @@ SQLite3 supports automatic property list serialisation:
     SQLite3StatementBindIntegerWithName(statement, @"id", 1);
     SQLite3StatementBindPropertyList(statement, preferences);
     SQlite3StatementExecute(statement);
+    SQLite3StatementClearBindings(statement);
+    SQLite3StatementReset(statement);
+    SQLite3StatementFinalize(statement);
+    SQLite3StatementRelease(statement);
 
 To retrieve serialised object graph back you can use `SQLite3StatementCreatePropertyListWithColumn` or connection's function:
 

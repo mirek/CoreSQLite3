@@ -1,9 +1,8 @@
 //
 // SQLite3Connection.h
-// CoreSQLite3 Framework
+// CoreSQLite3
 //
-// Created by Mirek Rusin on 07/02/2011.
-// Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #include "CoreSQLite3.h"
@@ -72,3 +71,40 @@ CFPropertyListRef SQLite3ConnectionCreatePropertyListWithQuery            (SQLit
 bool SQLite3ConnectionDoesTableExistWithName       (SQLite3ConnectionRef connection, CFStringRef name);
 bool SQLite3ConnectionDoesViewExistWithName        (SQLite3ConnectionRef connection, CFStringRef name);
 bool SQLite3ConnectionDoesTableOrViewExistWithName (SQLite3ConnectionRef connection, CFStringRef name);
+
+#ifdef __OBJC__
+
+@class SQLite3Statement;
+
+@interface SQLite3Connection : NSObject {
+  SQLite3ConnectionRef connection;
+}
+
+@property (nonatomic, readonly) SQLite3ConnectionRef connection;
+
+- (id) initWithConnection: (SQLite3ConnectionRef) connection;
+- (id) initWithPath: (NSString *) path flags: (SQLite3OpenOptions) flags zVfs: (const char *) zVfs;
+- (id) initWithPath: (NSString *) path flags: (SQLite3OpenOptions) flags;
+- (void) dealloc;
+
+- (SQLite3Statement *) createStatementWithQuery: (NSString *) sql NS_RETURNS_RETAINED;
+- (SQLite3Statement *) statementWithQuery: (NSString *) sql;
+
+- (SQLite3Status) enumerateWithQuery: (NSString *) sql usingBlock: (BOOL (^)(NSDictionary *row)) block;
+
+- (BOOL) boolWithQuery: (NSString *) sql;
+- (NSString *) createStringWithQuery: (NSString *) sql NS_RETURNS_RETAINED;
+- (NSString *) stringWithQuery: (NSString *) sql;
+
+- (SQLite3Status) executeWithQuery: (NSString *) sql;
+- (SQLite3Status) executeWithQuery: (NSString *) sql dictionary: (NSDictionary *) dictionary;
+- (SQLite3Status) executeWithQuery: (NSString *) sql array: (NSArray *) array;
+
+- (int32_t) int32WithQuery: (NSString *) sql;
+- (int64_t) int64WithQuery: (NSString *) sql;
+
+- (SQLite3Status) dropTableWithName: (NSString *) name;
+
+@end
+
+#endif

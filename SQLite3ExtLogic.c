@@ -1,9 +1,8 @@
 //
-//  SQLite3ExtLogic.c
-//  SQLite3
+// SQLite3ExtLogic.c
+// CoreSQLite3
 //
-//  Created by Mirek Rusin on 20/04/2011.
-//  Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #include "SQLite3ExtLogic.h"

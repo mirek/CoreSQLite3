@@ -1,9 +1,8 @@
 //
 // SQLite3Statement.h
-// CoreSQLite3 Framework
+// CoreSQLite3
 //
-// Created by Mirek Rusin on 07/02/2011.
-// Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #import "CoreSQLite3.h"
@@ -33,6 +32,8 @@ CFStringRef SQLite3CreateColumnNameStringWithIndex (SQLite3StatementRef statemen
 CFIndex     SQLite3GetColumnIndexWithName          (SQLite3StatementRef statement, CFStringRef name);
 CFIndex     SQLite3StatementGetColumnIndexWithName (SQLite3StatementRef statement, CFStringRef name);
 
+CFStringRef SQLite3StatementCreateSQLString        (SQLite3StatementRef statement) CF_RETURNS_RETAINED;
+
 #pragma mark Binding
 
 SQLite3Status SQLite3StatementBindInt32                        (SQLite3StatementRef statement, CFIndex     index, int32_t     value);
@@ -53,9 +54,10 @@ CFStringRef   SQLite3StatementCreateBindParameterNameWithIndex (SQLite3Statement
 
 #pragma mark Extra binding functions
 
-SQLite3Status SQLite3StatementBindDateTimeWithAbsoluteTime (SQLite3StatementRef statement, CFIndex index, CFAbsoluteTime    value);
-SQLite3Status SQLite3StatementBindDateTimeWithDate         (SQLite3StatementRef statement, CFIndex index, CFDateRef         value);
-SQLite3Status SQLite3StatementBindCFType                   (SQLite3StatementRef statement, CFIndex index, CFTypeRef         value);
+SQLite3Status SQLite3StatementBindDateTimeWithAbsoluteTime (SQLite3StatementRef statement, CFIndex     index, CFAbsoluteTime    value);
+SQLite3Status SQLite3StatementBindDateTimeWithDate         (SQLite3StatementRef statement, CFIndex     index, CFDateRef         value);
+SQLite3Status SQLite3StatementBindCFType                   (SQLite3StatementRef statement, CFIndex     index, CFTypeRef         value);
+SQLite3Status SQLite3StatementBindCFTypeWithName           (SQLite3StatementRef statement, CFStringRef name,  CFTypeRef         value);
 SQLite3Status SQLite3StatementBindArray                    (SQLite3StatementRef statement,                CFArrayRef        values);
 SQLite3Status SQLite3StatementBindDictionary               (SQLite3StatementRef statement,                CFDictionaryRef   keyValuePairs);
 SQLite3Status SQLite3StatementBindPropertyList             (SQLite3StatementRef statement, CFIndex index, CFPropertyListRef value, CFPropertyListFormat format);
@@ -110,3 +112,39 @@ CFDictionaryRef SQLite3StatementCreateDictionaryWithAllColumns (SQLite3Statement
 
 bool        SQLite3StatementColumnGetBOOL(SQLite3StatementRef statement, CFIndex index);
 CFDataRef   SQLite3StatementColumnCreateData(SQLite3StatementRef statement, CFIndex index);
+
+#pragma mark Objective-C
+
+#ifdef __OBJC__
+
+@class SQLite3Connection;
+
+@interface SQLite3Statement : NSObject <NSFastEnumeration> {
+  SQLite3Connection *connection;
+  SQLite3StatementRef statement;
+}
+
+@property (nonatomic, readonly) SQLite3Connection *connection;
+@property (nonatomic, readonly) SQLite3StatementRef statement;
+
+- (id) initWithConnection: (SQLite3Connection *) connection query: (NSString *) sql;
++ (id) statementWithConnection: (SQLite3Connection *) connection query: (NSString *) sql;
+- (void) dealloc;
+
+//- (SQLite3Status) bindWithArray: (NSArray *) array;
+//- (SQLite3Status) bindWithDictionary: (NSDictionary *) dictionary;
+//
+- (SQLite3Status) bindObject: (id) object withName: (NSString *) name;
+//- (SQLite3Status) bindObject: (id) object withIndex: (NSUInteger) index;
+//
+//- (BOOL) boolWithColumnIndex: (NSUInteger) index;
+//
+//- (id) createObjectWithIndex: (NSUInteger) index;
+//- (id) objectWithIndex: (NSUInteger) index;
+//
+//- (NSString *) createStringWithColumnIndex: (NSUInteger) index;
+//- (NSString *) stringWithColumnIndex: (NSUInteger) index;
+
+@end
+
+#endif

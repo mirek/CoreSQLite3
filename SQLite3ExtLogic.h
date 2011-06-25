@@ -1,12 +1,8 @@
 //
 // SQLite3ExtLogic.h
-// http://github.com/mirek/CoreSQLite3
-// Created by Mirek Rusin on 20/04/2011
-// Copyright 2011 Mirek Rusin
+// CoreSQLite3
 //
-// CoreSQLite3 Logic Extension adds the following functions:
-//
-// * if(:test, :result_if_non_zero, :result_if_zero)
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #include "CoreSQLite3.h"

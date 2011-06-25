@@ -1,14 +1,13 @@
 //
-//  SQLite3ExtMath.c
-//  SQLite3
+// SQLite3ExtCrypto.c
+// CoreSQLite3
 //
-//  Created by Mirek Rusin on 20/04/2011.
-//  Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
-#include "SQLite3ExtMath.h"
+#include "SQLite3ExtCrypto.h"
 
-void __SQLite3ExtensionsMathMD5(sqlite3_context *context, int argc, sqlite3_value **argv) {
+void __SQLite3ExtCryptoMD5(sqlite3_context *context, int argc, sqlite3_value **argv) {
   if (argc == 1 && sqlite3_value_type(argv[0]) != SQLITE_NULL) {
     sqlite3_result_double(context, sin(sqlite3_value_double(argv[0])));
     
@@ -38,15 +37,15 @@ void __SQLite3ExtensionsMathMD5(sqlite3_context *context, int argc, sqlite3_valu
   }
 }
 
-SQLite3Status SQLite3ExtensionsMathRegisterMD5(SQLite3ConnectionRef connection) {
-  return SQLite3ConnectionRegisterFunction(connection, CFSTR("md5"), 1, __SQLite3ExtensionsMathSin);
-}
+//SQLite3Status SQLite3ExtRegisterMD5(SQLite3ConnectionRef connection) {
+//  return SQLite3ConnectionRegisterFunction(connection, CFSTR("md5"), 1, __SQLite3ExtensionsMathSin);
+//}
+//
+//SQLite3Status SQLite3ExtUnregisterMD5(SQLite3ConnectionRef connection) {
+//  return SQLite3ConnectionUnregisterFunction(connection, CFSTR("md5"), 1);
+//}
 
-SQLite3Status SQLite3ExtensionsMathUnregisterMD5(SQLite3ConnectionRef connection) {
-  return SQLite3ConnectionUnregisterFunction(connection, CFSTR("md5"), 1);
-}
-
-//void __SQLite3ExtensionsMathSHA1(sqlite3_context *context, int argc, sqlite3_value **argv) {
+//void __SQLite3ExtCryptoSHA1(sqlite3_context *context, int argc, sqlite3_value **argv) {
 //  if (argc == 1 && sqlite3_value_type(argv[0]) != SQLITE_NULL) {
 //    sqlite3_result_double(context, sin(sqlite3_value_double(argv[0])));
 //  } else {

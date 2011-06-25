@@ -1,9 +1,8 @@
 //
 // SQLite3Connection.c
-// CoreSQLite3 Framework
+// CoreSQLite3
 //
-// Created by Mirek Rusin on 07/02/2011.
-// Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #include "SQLite3Connection.h"
@@ -13,7 +12,7 @@
 #pragma Lifecycle
 
 inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, SQLite3OpenOptions flags, const char *zVfs) {
-  SQLite3ConnectionRef connection = CFAllocatorAllocate(allocator, sizeof(SQLite3Connection), 0);
+  SQLite3ConnectionRef connection = CFAllocatorAllocate(allocator, sizeof(__SQLite3Connection), 0);
   if (connection) {
     connection->allocator = allocator ? CFRetain(allocator) : NULL;
     connection->retainCount = 1;
@@ -27,13 +26,22 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
     connection->defaultDateFormatter = CFDateFormatterCreate(allocator, NULL, kCFDateFormatterNoStyle, kCFDateFormatterNoStyle);
     CFDateFormatterSetFormat(connection->defaultDateFormatter, CFSTR("yyyy-MM-dd HH:mm:ss.SSS"));
     
-    __SQLite3UTF8String utf8Path = __SQLite3UTF8StringMake(connection->allocator, path);
-    if (kSQLite3StatusOK == sqlite3_open_v2(__SQLite3UTF8StringGetBuffer(utf8Path), &connection->db, flags, zVfs)) {
-      SQLite3ConnectionSetBusyTimeout(connection, 3.0); // Let's set default busy timeout to 3 seconds
+    CFDataRef pathData = CFStringCreateExternalRepresentation(connection->allocator, path, kCFStringEncodingUTF8, 0);
+    if (pathData) {
+      if (kSQLite3StatusOK == sqlite3_open_v2((const char *)CFDataGetBytePtr(pathData), &connection->db, flags, zVfs)) {
+        
+        // All ok
+      } else {
+        
+        // Move to SQLite3ConnectionCreateWithError, otherwise we don't know what happened
+        connection = SQLite3ConnectionRelease(connection);
+      }
+      CFRelease(pathData);
     } else {
+      
+      // Move to SQLite3ConnectionCreateWithError, otherwise we don't know what happened
       connection = SQLite3ConnectionRelease(connection);
     }
-    __SQLite3UTF8StringDestroy(utf8Path);
   }
   return connection;
 }
@@ -138,9 +146,13 @@ inline sqlite3 *SQLite3ConnectionGetConnection(SQLite3ConnectionRef connection) 
 SQLite3Status SQLite3ConnectionRegisterFunction(SQLite3ConnectionRef connection, CFStringRef name, CFIndex argc, void (*f)(sqlite3_context *, int, sqlite3_value **)) {
   SQLite3Status status = kSQLite3StatusError;
   if (connection) {
-    __SQLite3UTF8String utf8Name = __SQLite3UTF8StringMake(connection->allocator, name);
-    status = sqlite3_create_function_v2(connection->db, __SQLite3UTF8StringGetBuffer(utf8Name), (int)argc, SQLITE_ANY, NULL, f, NULL, NULL, NULL);
-    __SQLite3UTF8StringDestroy(utf8Name);
+    if (name) {
+      CFDataRef nameData = CFStringCreateExternalRepresentation(connection->allocator, name, kCFStringEncodingUTF8, 0);
+      if (nameData) {
+        status = sqlite3_create_function_v2(connection->db, (const char *)CFDataGetBytePtr(nameData), (int)argc, SQLITE_ANY, NULL, f, NULL, NULL, NULL);
+        CFRelease(nameData);
+      }
+    }
   }
   return status;
 }
@@ -182,9 +194,11 @@ inline SQLite3Status SQLite3ConnectionExecuteWithContentsOfURL(SQLite3Connection
 inline SQLite3Status SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef sql) {
   SQLite3Status status = kSQLite3StatusError;
   if (sql) {
-    __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringMake(connection->allocator, sql);
-    status = sqlite3_exec(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), NULL, NULL, NULL);
-    __SQLite3UTF8StringDestroy(utf8Sql);
+    CFDataRef sqlData = CFStringCreateExternalRepresentation(connection->allocator, sql, kCFStringEncodingUTF8, 0);
+    if (sqlData) {
+      status = sqlite3_exec(connection->db, (const char *)CFDataGetBytePtr(sqlData), NULL, NULL, NULL);
+      CFRelease(sqlData);
+    }
   }
   return status;
 }

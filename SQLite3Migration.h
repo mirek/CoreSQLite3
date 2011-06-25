@@ -1,9 +1,8 @@
 //
 // SQLite3Migration.h
-// CoreSQLite3 Framework
+// CoreSQLite3
 //
-// Created by Mirek Rusin on 08/02/2011.
-// Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #if !defined(__CORE_SQLITE3_MIGRATION__)

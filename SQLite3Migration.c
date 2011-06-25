@@ -1,9 +1,8 @@
 //
 // SQLite3Migration.c
-// CoreSQLite3 Framework
+// CoreSQLite3
 //
-// Created by Mirek Rusin on 08/02/2011.
-// Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #include "SQLite3Migration.h"
@@ -53,30 +52,32 @@ CFMutableArrayRef SQlite3MigrationCreateURLsArrayWithDirectoryURL(CFAllocatorRef
   CFMutableArrayRef array = NULL;
   if (directoryURL) {
     CFStringRef directory = CFURLCopyFileSystemPath(directoryURL, kCFURLPOSIXPathStyle);
-    __SQLite3UTF8String utf8Directory = __SQLite3UTF8StringMake(allocator, directory);
-    DIR *dir = opendir(__SQLite3UTF8StringGetBuffer(utf8Directory));
-    struct dirent *ent = NULL;
-    if (dir != NULL) {
-      array = CFArrayCreateMutable(allocator, 0, &kCFTypeArrayCallBacks);
-      while ((ent = readdir(dir)) != NULL) {
-        CFStringRef filename = CFStringCreateWithCString(allocator, ent->d_name, kCFStringEncodingUTF8);
-        switch (SQLite3MigrationGetTypeWithPath(filename)) {
-          case kSQLite3MigrationTypeMigration:
-          case kSQLite3MigrationTypeUndoMigration:
-          {
-            CFURLRef url = CFURLCreateWithFileSystemPathRelativeToBase(allocator, filename, kCFURLPOSIXPathStyle, 0, directoryURL);
-            CFArrayAppendValue(array, url);
-            CFRelease(url);
-            break;
+    CFDataRef directoryData = CFStringCreateExternalRepresentation(allocator, directory, kCFStringEncodingUTF8, 0);
+    if (directoryData) {
+      DIR *dir = opendir((const char *)CFDataGetBytePtr(directoryData));
+      struct dirent *ent = NULL;
+      if (dir != NULL) {
+        array = CFArrayCreateMutable(allocator, 0, &kCFTypeArrayCallBacks);
+        while ((ent = readdir(dir)) != NULL) {
+          CFStringRef filename = CFStringCreateWithCString(allocator, ent->d_name, kCFStringEncodingUTF8);
+          switch (SQLite3MigrationGetTypeWithPath(filename)) {
+            case kSQLite3MigrationTypeMigration:
+            case kSQLite3MigrationTypeUndoMigration:
+            {
+              CFURLRef url = CFURLCreateWithFileSystemPathRelativeToBase(allocator, filename, kCFURLPOSIXPathStyle, 0, directoryURL);
+              CFArrayAppendValue(array, url);
+              CFRelease(url);
+              break;
+            }
+              
+            default:
+              break;
           }
-            
-          default:
-            break;
+          CFRelease(filename);
         }
-        CFRelease(filename);
       }
+      CFRelease(directoryData);
     }
-    __SQLite3UTF8StringDestroy(utf8Directory);
     CFRelease(directory);
   }
   return array;

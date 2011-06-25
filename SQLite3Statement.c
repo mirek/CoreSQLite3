@@ -1,9 +1,8 @@
 //
 // SQLite3Statement.c
-// CoreSQLite3 Framework
+// CoreSQLite3
 //
-// Created by Mirek Rusin on 07/02/2011.
-// Copyright 2011 Inteliv Ltd. All rights reserved.
+// Copyright 2011 Mirek Rusin <mirek [at] me [dot] com>
 //
 
 #include "SQLite3Statement.h"
@@ -13,22 +12,24 @@
 inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error) {
   SQLite3StatementRef statement = NULL;
   if (connection && sql) {
-    statement = CFAllocatorAllocate(allocator, sizeof(SQLite3Statement), 0);
+    statement = CFAllocatorAllocate(allocator, sizeof(__SQLite3Statement), 0);
     if (statement) {
       statement->connection = SQLite3ConnectionRetain(connection);   // Let's retain connection
       statement->allocator = allocator ? CFRetain(allocator) : NULL; // ...and allocator if not null
       statement->retainCount = 1;
       statement->stmt = NULL;
-      __SQLite3UTF8String utf8Sql = __SQLite3UTF8StringMake(statement->allocator, sql);
-      SQLite3Status status = sqlite3_prepare_v2(connection->db, __SQLite3UTF8StringGetBuffer(utf8Sql), -1, &statement->stmt, NULL);
-      if (kSQLite3StatusOK != status) {
-        if (error) {
-          *error = CFErrorCreate(allocator, CFSTR("com.github.mirek.SQLite3"), status, NULL);
+      CFDataRef sqlData = CFStringCreateExternalRepresentation(statement->allocator, sql, kCFStringEncodingUTF8, 0);
+      if (sqlData) {
+        SQLite3Status status = sqlite3_prepare_v2(connection->db, (const char *)CFDataGetBytePtr(sqlData), -1, &statement->stmt, NULL);
+        if (kSQLite3StatusOK != status) {
+          if (error) {
+            *error = CFErrorCreate(allocator, CFSTR("com.github.mirek.SQLite3"), status, NULL);
+          }
+          printf("ERROR: %s\n", sqlite3_errmsg(connection->db));
+          statement = SQLite3StatementRelease(statement); // ...will be set to NULL
         }
-        printf("ERROR: %s\n", sqlite3_errmsg(connection->db));
-        statement = SQLite3StatementRelease(statement); // ...will be set to NULL
+        CFRelease(sqlData);
       }
-      __SQLite3UTF8StringDestroy(utf8Sql);
     }
   }
   return statement;
@@ -135,19 +136,27 @@ inline CFIndex SQLite3StatementGetColumnCount(SQLite3StatementRef statement) {
 inline CFIndex SQLite3StatementGetColumnIndexWithName(SQLite3StatementRef statement, CFStringRef name) {
   CFIndex index = -1;
   if (name) {
-    __SQLite3UTF8String utf8Name = __SQLite3UTF8StringMake(statement->allocator, name);
-    if (__SQLite3UTF8StringGetBuffer(utf8Name)) {
+    CFDataRef nameData = CFStringCreateExternalRepresentation(statement->allocator, name, kCFStringEncodingUTF8, 0);
+    if (nameData) {
       CFIndex n = sqlite3_column_count(statement->stmt);
       for (CFIndex i = 0; i < n; i++) {
-        if (0 == strcmp(__SQLite3UTF8StringGetBuffer(utf8Name), sqlite3_column_name(statement->stmt, (int)i))) {
+        if (0 == strcmp((const char *)CFDataGetBytePtr(nameData), sqlite3_column_name(statement->stmt, (int)i))) {
           index = i;
           break;
         }
       }
+      CFRelease(nameData);
     }
-    __SQLite3UTF8StringDestroy(utf8Name);
   }
   return index;
+}
+
+inline CFStringRef SQLite3StatementCreateSQLString(SQLite3StatementRef statement) {
+  CFStringRef sql = NULL;
+  if (statement) {
+    sql = CFStringCreateWithCString(statement->allocator, sqlite3_sql(statement->stmt), kCFStringEncodingUTF8);
+  }
+  return sql;
 }
 
 #pragma mark Bindings
@@ -155,9 +164,11 @@ inline CFIndex SQLite3StatementGetColumnIndexWithName(SQLite3StatementRef statem
 inline CFIndex SQLite3StatementGetBindParameterIndexWithName(SQLite3StatementRef statement, CFStringRef name) {
   int index = 0;
   if (name) {
-    __SQLite3UTF8String utf8Name = __SQLite3UTF8StringMake(statement->allocator, name);
-    index = sqlite3_bind_parameter_index(statement->stmt, __SQLite3UTF8StringGetBuffer(utf8Name));
-    __SQLite3UTF8StringDestroy(utf8Name);
+    CFDataRef nameData = CFStringCreateExternalRepresentation(statement->allocator, name, kCFStringEncodingUTF8, 0);
+    if (nameData) {
+      index = sqlite3_bind_parameter_index(statement->stmt, (const char *)CFDataGetBytePtr(nameData));
+      CFRelease(nameData);
+    }
   }
   return index;
 }
@@ -214,9 +225,11 @@ inline SQLite3Status SQLite3StatementBindNULLWithName(SQLite3StatementRef statem
 inline SQLite3Status SQLite3StatementBindString(SQLite3StatementRef statement, CFIndex index, CFStringRef value) {
   SQLite3Status status = kSQLite3StatusError;
   if (value) {
-    __SQLite3UTF8String utf8Value = __SQLite3UTF8StringMake(statement->allocator, value);
-    status = sqlite3_bind_text(statement->stmt, (int)index, __SQLite3UTF8StringGetBuffer(utf8Value), -1, SQLITE_TRANSIENT);
-    __SQLite3UTF8StringDestroy(utf8Value);
+    CFDataRef valueData = CFStringCreateExternalRepresentation(statement->allocator, value, kCFStringEncodingUTF8, 0);
+    if (valueData) {
+      status = sqlite3_bind_text(statement->stmt, (int)index, (const char *)CFDataGetBytePtr(valueData), -1, SQLITE_TRANSIENT);
+      CFRelease(valueData);
+    }
   } else {
     status = SQLite3StatementBindNULL(statement, index);
   }
@@ -319,6 +332,10 @@ inline SQLite3Status SQLite3StatementBindCFType(SQLite3StatementRef statement, C
     status = SQLite3StatementBindNULL(statement, index);
   }
   return status;
+}
+
+inline SQLite3Status SQLite3StatementBindCFTypeWithName(SQLite3StatementRef statement, CFStringRef name, CFTypeRef value) {
+  return SQLite3StatementBindCFType(statement, SQLite3StatementGetBindParameterIndexWithName(statement, name), value);
 }
 
 // Bind an array of values to the statement.
