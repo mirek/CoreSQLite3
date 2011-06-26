@@ -68,24 +68,46 @@ CFDateRef         SQLite3ConnectionCreateDateWithQuery                    (SQLit
 CFDictionaryRef   SQLite3ConnectionCreateDictionaryForAllColumnsWithQuery (SQLite3ConnectionRef connection, CFStringRef sql);
 CFPropertyListRef SQLite3ConnectionCreatePropertyListWithQuery            (SQLite3ConnectionRef connection, CFStringRef sql, CFOptionFlags options, CFPropertyListFormat *format);
 
-bool SQLite3ConnectionDoesTableExistWithName       (SQLite3ConnectionRef connection, CFStringRef name);
-bool SQLite3ConnectionDoesViewExistWithName        (SQLite3ConnectionRef connection, CFStringRef name);
-bool SQLite3ConnectionDoesTableOrViewExistWithName (SQLite3ConnectionRef connection, CFStringRef name);
+#pragma mark Utility functions
+
+bool SQLite3ConnectionDoesTableExist       (SQLite3ConnectionRef connection, CFStringRef name);
+bool SQLite3ConnectionDoesViewExist        (SQLite3ConnectionRef connection, CFStringRef name);
+bool SQLite3ConnectionDoesTableOrViewExist (SQLite3ConnectionRef connection, CFStringRef name);
+bool SQLite3ConnectionDoesIndexExist       (SQLite3ConnectionRef connection, CFStringRef name);
+
+SQLite3Status SQLite3ConnectionDropTable (SQLite3ConnectionRef connection, CFStringRef name);
+SQLite3Status SQLite3ConnectionDropView  (SQLite3ConnectionRef connection, CFStringRef name);
+SQLite3Status SQLite3ConnectionDropIndex (SQLite3ConnectionRef connection, CFStringRef name);
 
 #ifdef __OBJC__
 
+#pragma mark Delegate protocol
+
 @class SQLite3Statement;
+@class SQLite3Connection;
+
+@protocol SQLite3ConnectionDelegate
+- (void) SQLite3Connection: (SQLite3Connection *) connection didIndicateProgressAndShouldCancel: (BOOL *) shouldCancel;
+- (void) SQLite3Connection: (SQLite3Connection *) connection didUpdateTable: (NSString *) table rowID: (int64_t) rowID operation: (SQLite3Operation) operation;
+- (void) SQLite3Connection: (SQLite3Connection *) connection didCommitAndShouldRollback: (BOOL *) shouldRollback;
+- (void) SQLite3ConnectionDidRollback: (SQLite3Connection *) connection;
+- (void) SQLite3Connection: (SQLite3Connection *) connection didCommitWriteAheadLogOnDatabase: (NSString *) name numberOfPages: (int) numberOfPages returnStatus: (SQLite3Status *) returnStatus;
+@end
 
 @interface SQLite3Connection : NSObject {
   SQLite3ConnectionRef connection;
+  id<SQLite3ConnectionDelegate> delegate;
 }
 
 @property (nonatomic, readonly) SQLite3ConnectionRef connection;
+@property (nonatomic, assign) id<SQLite3ConnectionDelegate> delegate;
 
 - (id) initWithConnection: (SQLite3ConnectionRef) connection;
 - (id) initWithPath: (NSString *) path flags: (SQLite3OpenOptions) flags zVfs: (const char *) zVfs;
 - (id) initWithPath: (NSString *) path flags: (SQLite3OpenOptions) flags;
 - (void) dealloc;
+
+- (SQLite3Status) status;
 
 - (SQLite3Statement *) createStatementWithQuery: (NSString *) sql NS_RETURNS_RETAINED;
 - (SQLite3Statement *) statementWithQuery: (NSString *) sql;
@@ -103,7 +125,11 @@ bool SQLite3ConnectionDoesTableOrViewExistWithName (SQLite3ConnectionRef connect
 - (int32_t) int32WithQuery: (NSString *) sql;
 - (int64_t) int64WithQuery: (NSString *) sql;
 
-- (SQLite3Status) dropTableWithName: (NSString *) name;
+#pragma mark Utility methods
+
+- (SQLite3Status) dropTable: (NSString *) name;
+- (SQLite3Status) dropView: (NSString *) name;
+- (SQLite3Status) dropIndex: (NSString *) name;
 
 @end
 

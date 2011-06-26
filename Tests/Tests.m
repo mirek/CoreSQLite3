@@ -72,6 +72,7 @@ void TestUpdateCallbackCallback1(SQLite3ConnectionRef connection, SQLite3Action 
 
 - (void) testEnumeration {
   SQLite3Statement *statement = [connection createStatementWithQuery: @"select * from sqlite_master where type = :type"];
+  
   [statement bindObject: @"index" withName: @":type"];
   for (id row in statement)
     NSLog(@"index name: %@", [row objectForKey: @"name"]);
@@ -79,6 +80,8 @@ void TestUpdateCallbackCallback1(SQLite3ConnectionRef connection, SQLite3Action 
   [statement bindObject: @"table" withName: @":type"];
   for (id row in statement)
     NSLog(@"table name: %@", [row objectForKey: @"name"]);
+  
+  [statement release];
   
   [connection enumerateWithQuery: @"select * from sqlite_master" usingBlock: ^(NSDictionary *row, BOOL *stop) {
     NSLog(@"all: %@", [row objectForKey: @"name"]);
@@ -99,7 +102,7 @@ void TestUpdateCallbackCallback1(SQLite3ConnectionRef connection, SQLite3Action 
 //- (void) testUpdateCallback {
 //  [connection executeWithQuery: @"create table test_update_callback(id int primary key, name string)"];
 //  
-//  bool didInvoke = 0;
+//  __block BOOL didInvoke = NO;
 //  
 ////  SQLite3ObserverRef observer = SQLite3ConnectionCreateObserver(connection, kSQLite3ActionInsert | kSQLite3ActionUpdate | kSQLite3ActionDelete);
 ////  

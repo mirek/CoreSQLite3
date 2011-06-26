@@ -108,6 +108,12 @@ typedef enum SQLite3ColumnType {
   kSQLite3TypeString  = SQLITE_TEXT,
 } SQLite3ColumnType;
 
+typedef enum SQLite3Operation {
+  SQLite3OperationInsert,
+  SQLite3OperationUpdate,
+  SQLite3OperationDelete
+} SQLite3Operation;
+
 //extern typedef struct SQLite3ConnectionRef SQLite3ConnectionRef;
 
 #pragma Callbacks

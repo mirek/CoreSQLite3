@@ -178,18 +178,18 @@ inline SQLite3Status SQLite3ConnectionExecuteWithContentsOfURL(SQLite3Connection
   return status;
 }
 
-//inline SQLite3Status SQLite3ConnectionExecutev(SQLite3ConnectionRef connection, CFStringRef sql, ...) {
-//  va_list arguments;
-//  va_start(arguments, sql);
-//  CFStringRef sqlv = CFStringCreateWithFormatAndArguments(connection->allocator, NULL, sql, arguments);
-//  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sqlv);
-//  CFRelease(sqlv);
-//  va_end(arguments);
-//  SQLite3Status status = SQLite3StatementStep(statement);
-//  SQLite3StatementReset(statement);
-//  SQLite3StatementRelease(statement);
-//  return status;
-//}
+inline SQLite3Status SQLite3ConnectionExecutev(SQLite3ConnectionRef connection, CFStringRef sql, ...) {
+  va_list arguments;
+  va_start(arguments, sql);
+  CFStringRef sqlv = CFStringCreateWithFormatAndArguments(connection->allocator, NULL, sql, arguments);
+  va_end(arguments);
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sqlv);
+  SQLite3Status status = SQLite3StatementStep(statement);
+  SQLite3StatementReset(statement);
+  SQLite3StatementRelease(statement);
+  CFRelease(sqlv);
+  return status;
+}
 
 inline SQLite3Status SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef sql) {
   SQLite3Status status = kSQLite3StatusError;
@@ -354,14 +354,15 @@ inline CFPropertyListRef SQLite3ConnectionCreatePropertyListWithQuery(SQLite3Con
 #pragma Utility functions
 
 inline SQLite3Status SQLite3ConnectionDropTable(SQLite3ConnectionRef connection, CFStringRef name) {
-  CFStringRef sql = CFStringCreateWithFormat(connection->allocator, 0, CFSTR("drop table %@"), name); // TODO: Excape properly
-  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
-  SQLite3Status status = SQLite3StatementStep(statement);
-  SQLite3StatementReset(statement);
-  SQLite3StatementFinalize(statement);
-  SQLite3StatementRelease(statement);
-  CFRelease(sql);
-  return status;
+  return SQLite3ConnectionExecutev(connection, CFSTR("drop table %@;"), name); // TODO:
+}
+
+inline SQLite3Status SQLite3ConnectionDropView(SQLite3ConnectionRef connection, CFStringRef name) {
+  return SQLite3ConnectionExecutev(connection, CFSTR("drop view %@;"), name); // TODO:
+}
+
+inline SQLite3Status SQLite3ConnectionDropIndex(SQLite3ConnectionRef connection, CFStringRef name) {
+  return SQLite3ConnectionExecutev(connection, CFSTR("drop index %@;"), name); // TODO:
 }
 
 inline SQLite3Status SQLite3ConnectionDropTableIfExists(SQLite3ConnectionRef connection, CFStringRef name) {
@@ -404,6 +405,19 @@ inline bool SQLite3ConnectionDoesTableOrViewExist(SQLite3ConnectionRef connectio
   if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
     exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
   }
+  SQLite3StatementReset(statement);
+  SQLite3StatementClearBindings(statement);
+  SQLite3StatementFinalize(statement);
+  SQLite3StatementRelease(statement);
+  return exists;
+}
+
+inline bool SQLite3ConnectionDoesIndexExist(SQLite3ConnectionRef connection, CFStringRef name) {
+  bool exists = 0;
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("select count(*) from sqlite_master where type = 'index' and name = ?"));
+  SQLite3StatementBindString(statement, 1, name);
+  if (kSQLite3StatusRow == SQLite3StatementStep(statement))
+    exists = SQLite3StatementGetBOOLWithColumn(statement, 0);
   SQLite3StatementReset(statement);
   SQLite3StatementClearBindings(statement);
   SQLite3StatementFinalize(statement);
