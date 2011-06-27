@@ -63,6 +63,7 @@ SQLite3Status SQLite3StatementBindNULLWithName         (SQLite3StatementRef stat
 SQLite3Status SQLite3StatementBindBoolWithName         (SQLite3StatementRef statement, CFStringRef  nameWithSpecialCharacter, bool        value);
 SQLite3Status SQLite3StatementBindInt32WithName        (SQLite3StatementRef statement, CFStringRef  nameWithSpecialCharacter, int32_t     value);
 SQLite3Status SQLite3StatementBindInt64WithName        (SQLite3StatementRef statement, CFStringRef  nameWithSpecialCharacter, int64_t     value);
+SQLite3Status SQLite3StatementBindDoubleWithName       (SQLite3StatementRef statement, CFStringRef  nameWithSpecialCharacter, double_t    value);
 SQLite3Status SQLite3StatementBindAbsoluteTimeWithName (SQLite3StatementRef statement, CFIndex     _1BasedIndex,              CFAbsoluteTime    value);
 
 SQLite3Status SQLite3StatementBindCFTypeWithName       (SQLite3StatementRef statement, CFStringRef  nameWithSpecialCharacter, CFTypeRef         value);
@@ -105,6 +106,7 @@ double_t          SQLite3StatementGetDoubleWithColumnName          (SQLite3State
 
 CFTypeRef         SQLite3StatementCreateCFTypeWithColumnName       (SQLite3StatementRef statement, CFStringRef name) CF_RETURNS_RETAINED;
 CFStringRef       SQLite3StatementCreateStringWithColumnName       (SQLite3StatementRef statement, CFStringRef name) CF_RETURNS_RETAINED;
+CFNumberRef       SQLite3StatementCreateNumberWithColumnName       (SQLite3StatementRef statement, CFStringRef name) CF_RETURNS_RETAINED;
 CFDateRef         SQLite3StatementCreateDateWithColumnName         (SQLite3StatementRef statement, CFStringRef name) CF_RETURNS_RETAINED;
 CFDataRef         SQLite3StatementCreateDataWithColumnName         (SQLite3StatementRef statement, CFStringRef name) CF_RETURNS_RETAINED;
 CFPropertyListRef SQLite3StatementCreatePropertyListWithColumnName (SQLite3StatementRef statement, CFStringRef name, CFOptionFlags options, CFPropertyListFormat *format) CF_RETURNS_RETAINED;
@@ -177,7 +179,24 @@ CFDictionaryRef   SQLite3StatementCreateDictionaryWithAllColumns (SQLite3Stateme
 - (SQLite3Status) bindInt64:  (int64_t)    value withName: (NSString *) nameWithSpecialCharacter;
 - (SQLite3Status) bindDouble: (double_t)   value withName: (NSString *) nameWithSpecialCharacter;
 
-#pragma mark Objects
+#pragma mark Resultsets
+#pragma mark -
+
+#pragma mark Index based values
+
+- (boolean_t) boolWithColumn:   (NSInteger) index;
+- (int32_t)   intWithColumn:    (NSInteger) index;
+- (int64_t)   int64WithColumn:  (NSInteger) index;
+- (double_t)  doubleWithColumn: (NSInteger) index;
+
+#pragma mark Name based values
+
+- (boolean_t) boolWithColumnName:   (NSString *) name;
+- (int32_t)   intWithColumnName:    (NSString *) name;
+- (int64_t)   int64WithColumnName:  (NSString *) name;
+- (double_t)  doubleWithColumnName: (NSString *) name;
+
+#pragma mark Index based, reference counted
 
 - (id)         createObjectWithColumn: (NSInteger) index NS_RETURNS_RETAINED;
 - (NSString *) createStringWithColumn: (NSInteger) index NS_RETURNS_RETAINED;
@@ -185,11 +204,15 @@ CFDictionaryRef   SQLite3StatementCreateDictionaryWithAllColumns (SQLite3Stateme
 - (NSDate *)   createDateWithColumn:   (NSInteger) index NS_RETURNS_RETAINED;
 - (NSData *)   createDataWithColumn:   (NSInteger) index NS_RETURNS_RETAINED;
 
+#pragma mark Index based, autoreleased
+
 - (id)         objectWithColumn: (NSInteger) index;
 - (NSString *) stringWithColumn: (NSInteger) index;
 - (NSNumber *) numberWithColumn: (NSInteger) index;
 - (NSDate *)   dateWithColumn:   (NSInteger) index;
 - (NSData *)   dataWithColumn:   (NSInteger) index;
+
+#pragma mark Name based, reference counted
 
 - (id)         createObjectWithColumnName: (NSString *) name NS_RETURNS_RETAINED;
 - (NSString *) createStringWithColumnName: (NSString *) name NS_RETURNS_RETAINED;
@@ -197,33 +220,13 @@ CFDictionaryRef   SQLite3StatementCreateDictionaryWithAllColumns (SQLite3Stateme
 - (NSDate *)   createDateWithColumnName:   (NSString *) name NS_RETURNS_RETAINED;
 - (NSData *)   createDataWithColumnName:   (NSString *) name NS_RETURNS_RETAINED;
 
+#pragma mark Name based, autoreleased
+
 - (id)         objectWithColumnName: (NSString *) name;
 - (NSString *) stringWithColumnName: (NSString *) name;
 - (NSNumber *) numberWithColumnName: (NSString *) name;
 - (NSDate *)   dateWithColumnName:   (NSString *) name;
 - (NSData *)   dataWithColumnName:   (NSString *) name;
-
-//#pragma mark Values
-//
-//- (BOOL)    BOOLWithColumn:    (NSInteger) index;
-//- (SInt32)  SInt32WithColumn:  (NSInteger) index;
-//- (SInt32)  Int32WithColumn:   (NSInteger) index;
-//- (UInt32)  UInt32WithColumn:  (NSInteger) index;
-//- (SInt64)  SInt64WithColumn:  (NSInteger) index;
-//- (SInt64)  Int64WithColumn:   (NSInteger) index;
-//- (UInt64)  UInt64WithColumn:  (NSInteger) index;
-//- (Float32) Float32WithColumn: (NSInteger) index;
-//- (Float64) Float64WithColumn: (NSInteger) index;
-//
-//- (BOOL)    BOOLWithColumnName:    (NSString *) name;
-//- (SInt32)  SInt32WithColumnName:  (NSString *) name;
-//- (SInt32)  Int32WithColumnName:   (NSString *) name;
-//- (UInt32)  UInt32WithColumnName:  (NSString *) name;
-//- (SInt64)  SInt64WithColumnName:  (NSString *) name;
-//- (SInt64)  Int64WithColumnName:   (NSString *) name;
-//- (UInt64)  UInt64WithColumnName:  (NSString *) name;
-//- (Float32) Float32WithColumnName: (NSString *) name;
-//- (Float64) Float64WithColumnName: (NSString *) name;
 
 @end
 

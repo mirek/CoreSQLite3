@@ -330,6 +330,10 @@ inline SQLite3Status SQLite3StatementBindInt64WithName(SQLite3StatementRef state
   return SQLite3StatementBindInt64(statement, SQLite3StatementGetBindParameterIndexWithName(statement, name), value);
 }
 
+inline SQLite3Status SQLite3StatementBindDoubleWithName(SQLite3StatementRef statement, CFStringRef name, double_t value) {
+  return SQLite3StatementBindDouble(statement, SQLite3StatementGetBindParameterIndexWithName(statement, name), value);
+}
+
 inline SQLite3Status SQLite3StatementBindCFTypeWithName(SQLite3StatementRef statement, CFStringRef name, CFTypeRef value) {
   return SQLite3StatementBindCFType(statement, SQLite3StatementGetBindParameterIndexWithName(statement, name), value);
 }
