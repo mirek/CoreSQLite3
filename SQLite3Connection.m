@@ -86,36 +86,96 @@
   return status;
 }
 
-- (BOOL) boolWithQuery: (NSString *) sql {
+- (SQLite3Status) execute: (NSString *) sql {
+  return SQLite3ConnectionExecute(connection, (CFStringRef) sql);
+}
+
+- (SQLite3Status) execute: (NSString *) sql withDictionaryBindings: (NSDictionary *) dictionary {
+  return SQLite3ConnectionExecuteWithDictionaryBindings(connection, (CFStringRef)sql, (CFDictionaryRef)dictionary);
+}
+
+- (SQLite3Status) execute: (NSString *) sql withArrayBindings: (NSArray *) array {
+  return SQLite3ConnectionExecuteWithArrayBindings(connection, (CFStringRef)sql, (CFArrayRef)array);
+}
+
+#pragma mark Value results
+
+- (boolean_t) boolWithQuery: (NSString *) sql {
   return SQLite3ConnectionGetBOOLWithQuery(connection, (CFStringRef)sql);
+}
+
+- (int32_t) intWithQuery: (NSString *) sql {
+  return SQLite3ConnectionGetInt32WithQuery(connection, (CFStringRef)sql);
+}
+
+- (int64_t) int64WithQuery: (NSString *) sql {
+  return SQLite3ConnectionGetInt64WithQuery(connection, (CFStringRef)sql);
+}
+
+- (double_t) doubleWithQuery: (NSString *) sql {
+  return SQLite3ConnectionGetDoubleWithQuery(connection, (CFStringRef)sql);
+}
+
+#pragma mark Reference counted object results
+
+- (id) createObjectWithQuery: (NSString *) sql {
+  return (id)SQLite3ConnectionCreateCFTypeWithQuery(connection, (CFStringRef)sql);
 }
 
 - (NSString *) createStringWithQuery: (NSString *) sql {
   return (NSString *)SQLite3ConnectionCreateStringWithQuery(connection, (CFStringRef)sql);
 }
 
+- (NSNumber *) createNumberWithQuery: (NSString *) sql {
+  return (NSNumber *)SQLite3ConnectionCreateNumberWithQuery(connection, (CFStringRef)sql);
+}
+
+- (NSDate *) createDateWithQuery: (NSString *) sql {
+  return (NSDate *)SQLite3ConnectionCreateDateWithQuery(connection, (CFStringRef)sql);
+}
+
+- (NSData *) createDataWithQuery: (NSString *) sql {
+  return (NSData *)SQLite3ConnectionCreateDataWithQuery(connection, (CFStringRef)sql);
+}
+
+#pragma mark Autoreleased object results
+
+- (id) objectWithQuery: (NSString *) sql {
+  return [[self createObjectWithQuery: sql] autorelease];
+}
+
 - (NSString *) stringWithQuery: (NSString *) sql {
   return [[self createStringWithQuery: sql] autorelease];
 }
 
-- (SQLite3Status) executeWithQuery: (NSString *) sql {
-  return SQLite3ConnectionExecute(connection, (CFStringRef) sql);
+- (NSNumber *) numberWithQuery: (NSString *) sql {
+  return [[self createNumberWithQuery: sql] autorelease];
 }
 
-- (SQLite3Status) executeWithQuery: (NSString *) sql dictionary: (NSDictionary *) dictionary {
-  return SQLite3ConnectionExecuteWithDictionaryBindings(connection, (CFStringRef)sql, (CFDictionaryRef)dictionary);
+- (NSDate *) dateWithQuery: (NSString *) sql {
+  return [[self createDateWithQuery: sql] autorelease];
 }
 
-- (SQLite3Status) executeWithQuery: (NSString *) sql array: (NSArray *) array {
-  return SQLite3ConnectionExecuteWithArrayBindings(connection, (CFStringRef)sql, (CFArrayRef)array);
+- (NSData *) dataWithQuery: (NSString *) sql {
+  return [[self createDataWithQuery: sql] autorelease];
 }
 
-- (int32_t) int32WithQuery: (NSString *) sql {
-  return SQLite3ConnectionGetInt32WithQuery(connection, (CFStringRef)sql);
+#pragma mark Utility functions
+
+- (BOOL) doesTableExist: (NSString *) name {
+  return SQLite3ConnectionDoesTableExist(connection, (CFStringRef)name);
 }
 
-- (int64_t) int64WithQuery: (NSString *) sql {
-  return SQLite3ConnectionGetInt64WithQuery(connection, (CFStringRef)sql);
+- (BOOL) doesViewExist: (NSString *) name {
+  return SQLite3ConnectionDoesViewExist(connection, (CFStringRef)name);
+}
+
+- (BOOL) doesTableOrViewExist: (NSString *) name {
+  return SQLite3ConnectionDoesTableOrViewExist(connection, (CFStringRef)name);
+}
+
+- (BOOL) doesIndexExist: (NSString *) name {
+  return SQLite3ConnectionDoesIndexExist(connection, (CFStringRef)name);
 }
 
 - (SQLite3Status) dropTable: (NSString *) name {
@@ -130,40 +190,36 @@
   return SQLite3ConnectionDropIndex(connection, (CFStringRef)name);
 }
 
-- (BOOL) doesTableExistWithName: (NSString *) name {
-  return SQLite3ConnectionDoesTableExist(connection, (CFStringRef)name);
+- (SQLite3Status) dropTableIfExists: (NSString *) name {
+  return SQLite3ConnectionDropTableIfExists(connection, (CFStringRef)name);
 }
 
-- (BOOL) doesViewExistWithName: (NSString *) name {
-  return SQLite3ConnectionDoesViewExist(connection, (CFStringRef)name);
+- (SQLite3Status) dropViewIfExists: (NSString *) name {
+  return SQLite3ConnectionDropViewIfExists(connection, (CFStringRef)name);
 }
 
-- (BOOL) doesTableOrViewExistWithName: (NSString *) name {
-  return SQLite3ConnectionDoesTableOrViewExist(connection, (CFStringRef)name);
+- (SQLite3Status) dropIndexIfExists: (NSString *) name {
+  return SQLite3ConnectionDropIndexIfExists(connection, (CFStringRef)name);
 }
 
-- (BOOL) doesIndexExistWithName: (NSString *) name {
-  return SQLite3ConnectionDoesIndexExist(connection, (CFStringRef)name);
+- (BOOL) doesTableOrView: (NSString *) name haveRowWithID: (int64_t) rowID {
+  return SQLite3ConnectionDoesTableOrViewHaveRowWithID(connection, (CFStringRef)name, rowID);
 }
 
-//- (BOOL) doesTableOrView: (NSString *) name haveRowWithID: (int64_t) rowID {
-//  return SQLite3ConnectionDoesTableOrViewHaveRowWithID(connection, (CFStringRef)name, rowID);
-//}
+- (NSArray *) createArrayWithTableOrView: (NSString *) name forRowID: (int64_t) rowID {
+  return (NSArray *)SQLite3ConnectionCreateArrayWithTableOrViewForRowID(connection, (CFStringRef)name, rowID);
+}
 
-//- (NSDictionary *) createDictionaryWithTableOrView: (NSString *) name forRowID: (int64_t) rowID {
-//  return (NSDictionary *)SQLite3ConnectionCreateDictionaryWithTableOrViewForRowID(connection, (CFStringRef)name, rowID);
-//}
+- (NSDictionary *) createDictionaryWithTableOrView: (NSString *) name forRowID: (int64_t) rowID {
+  return (NSDictionary *)SQLite3ConnectionCreateDictionaryWithTableOrViewForRowID(connection, (CFStringRef)name, rowID);
+}
 
-//- (NSDictionary *) dictionaryWithTableOrView: (NSString *) name forRowID: (int64_t) rowID {
-//  return [[self createDictionaryWithTableOrView: name forRowID: rowID] autorelease];
-//}
+- (NSDictionary *) dictionaryWithTableOrView: (NSString *) name forRowID: (int64_t) rowID {
+  return [[self createDictionaryWithTableOrView: name forRowID: rowID] autorelease];
+}
 
-//- (NSArray *) createArrayWithTableOrView: (NSString *) name forRowID: (int64_t) rowID {
-//  return (NSArray *)SQLite3ConnectionCreateArrayWithTableOrViewForRowID(connection, (CFStringRef)name, rowID);
-//}
-
-//- (NSArray *) arrayWithTableOrView: (NSString *) name forRowID: (int64_t) rowID {
-//  return [[self createArrayWithTableOrView: name forRowID: rowID] autorelease];
-//}
+- (NSArray *) arrayWithTableOrView: (NSString *) name forRowID: (int64_t) rowID {
+  return [[self createArrayWithTableOrView: name forRowID: rowID] autorelease];
+}
 
 @end

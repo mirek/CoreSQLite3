@@ -36,7 +36,13 @@ inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQL
 }
 
 inline SQLite3StatementRef SQLite3StatementCreateWithError(SQLite3ConnectionRef connection, CFStringRef sql, CFErrorRef *error) {
-  return _SQLite3StatementCreate(connection->allocator, connection, sql, error);
+  SQLite3StatementRef statement = NULL;
+  if (connection) {
+    if (sql) {
+      statement = _SQLite3StatementCreate(connection->allocator, connection, sql, error);
+    }
+  }
+  return statement;
 }
 
 inline SQLite3StatementRef SQLite3StatementCreate(SQLite3ConnectionRef connection, CFStringRef sql) {
@@ -613,7 +619,7 @@ inline CFDataRef SQLite3StatementCreateDataWithColumnName(SQLite3StatementRef st
 //  return image;
 //}
 
-inline CFArrayRef SQLite3StatementCreateArrayWithAllColumns(SQLite3StatementRef statement) {
+inline CFArrayRef SQLite3StatementCreateArrayForAllColumns(SQLite3StatementRef statement) {
   CFArrayRef array = NULL;
   if (statement) {
     CFIndex count = SQLite3StatementGetColumnCount(statement);
@@ -632,10 +638,10 @@ inline CFArrayRef SQLite3StatementCreateArrayWithAllColumns(SQLite3StatementRef 
       }
     }
   }
-  return NULL;
+  return array;
 }
 
-inline CFDictionaryRef SQLite3StatementCreateDictionaryWithAllColumns(SQLite3StatementRef statement) {
+inline CFDictionaryRef SQLite3StatementCreateDictionaryForAllColumns(SQLite3StatementRef statement) {
   CFDictionaryRef dictionary = NULL;
   CFIndex count = SQLite3StatementGetColumnCount(statement);
   if (count > 0) {

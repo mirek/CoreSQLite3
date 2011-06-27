@@ -112,8 +112,8 @@ CFDataRef         SQLite3StatementCreateDataWithColumnName         (SQLite3State
 CFPropertyListRef SQLite3StatementCreatePropertyListWithColumnName (SQLite3StatementRef statement, CFStringRef name, CFOptionFlags options, CFPropertyListFormat *format) CF_RETURNS_RETAINED;
 //CGImageRef SQLite3StatementCreateImageWithColumnName (SQLite3StatementRef statement, CFStringRef name) CF_RETURNS_RETAINED;
 
-CFArrayRef        SQLite3StatementCreateArrayWithAllColumns      (SQLite3StatementRef statement) CF_RETURNS_RETAINED;
-CFDictionaryRef   SQLite3StatementCreateDictionaryWithAllColumns (SQLite3StatementRef statement) CF_RETURNS_RETAINED;
+CFArrayRef        SQLite3StatementCreateArrayForAllColumns      (SQLite3StatementRef statement) CF_RETURNS_RETAINED;
+CFDictionaryRef   SQLite3StatementCreateDictionaryForAllColumns (SQLite3StatementRef statement) CF_RETURNS_RETAINED;
 
 #pragma mark Objective-C
 
@@ -141,6 +141,9 @@ CFDictionaryRef   SQLite3StatementCreateDictionaryWithAllColumns (SQLite3Stateme
 
 - (void) dealloc;
 
+- (SQLite3Status) step;
+- (SQLite3Status) reset;
+
 #pragma mark Column info
 
 - (NSInteger) columnCount;
@@ -148,6 +151,8 @@ CFDictionaryRef   SQLite3StatementCreateDictionaryWithAllColumns (SQLite3Stateme
 - (SQLite3ColumnType) columnTypeWithName:  (NSString *) name;
 
 #pragma mark Bindings
+
+- (SQLite3Status) clearBindings;
 
 - (NSInteger) bindParameterIndexWithName: (NSString *) nameWithSpecialCharacter;
 - (NSInteger) bindParametersCount;
@@ -157,22 +162,24 @@ CFDictionaryRef   SQLite3StatementCreateDictionaryWithAllColumns (SQLite3Stateme
 - (SQLite3Status) bindWithArray: (NSArray *) array;
 - (SQLite3Status) bindWithDictionary: (NSDictionary *) dictionary;
 
-- (SQLite3Status) bindObject: (id)         value withIndex: (NSInteger) _1BasedIndex;
-- (SQLite3Status) bindString: (NSString *) value withIndex: (NSInteger) _1BasedIndex;
-- (SQLite3Status) bindNumber: (NSNumber *) value withIndex: (NSInteger) _1BasedIndex;
-- (SQLite3Status) bindDate:   (NSDate *)   value withIndex: (NSInteger) _1BasedIndex;
-- (SQLite3Status) bindData:   (NSData *)   value withIndex: (NSInteger) _1BasedIndex;
+- (SQLite3Status) bindObject:       (id)         value withIndex: (NSInteger) _1BasedIndex;
+- (SQLite3Status) bindString:       (NSString *) value withIndex: (NSInteger) _1BasedIndex;
+- (SQLite3Status) bindNumber:       (NSNumber *) value withIndex: (NSInteger) _1BasedIndex;
+- (SQLite3Status) bindDate:         (NSDate *)   value withIndex: (NSInteger) _1BasedIndex;
+- (SQLite3Status) bindData:         (NSData *)   value withIndex: (NSInteger) _1BasedIndex;
+- (SQLite3Status) bindPropertyList: (id)         value withIndex: (NSInteger) _1BasedIndex format: (NSPropertyListFormat) format;
 
 - (SQLite3Status) bindBOOL:   (BOOL)       value withIndex: (NSInteger) _1BasedIndex;
 - (SQLite3Status) bindInt32:  (int32_t)    value withIndex: (NSInteger) _1BasedIndex;
 - (SQLite3Status) bindInt64:  (int64_t)    value withIndex: (NSInteger) _1BasedIndex;
 - (SQLite3Status) bindDouble: (double_t)   value withIndex: (NSInteger) _1BasedIndex;
 
-- (SQLite3Status) bindObject: (id)         value withName: (NSString *) nameWithSpecialCharacter;
-- (SQLite3Status) bindString: (NSString *) value withName: (NSString *) nameWithSpecialCharacter;
-- (SQLite3Status) bindNumber: (NSNumber *) value withName: (NSString *) nameWithSpecialCharacter;
-- (SQLite3Status) bindDate:   (NSDate *)   value withName: (NSString *) nameWithSpecialCharacter;
-- (SQLite3Status) bindData:   (NSData *)   value withName: (NSString *) nameWithSpecialCharacter;
+- (SQLite3Status) bindObject:       (id)         value withName: (NSString *) nameWithSpecialCharacter;
+- (SQLite3Status) bindString:       (NSString *) value withName: (NSString *) nameWithSpecialCharacter;
+- (SQLite3Status) bindNumber:       (NSNumber *) value withName: (NSString *) nameWithSpecialCharacter;
+- (SQLite3Status) bindDate:         (NSDate *)   value withName: (NSString *) nameWithSpecialCharacter;
+- (SQLite3Status) bindData:         (NSData *)   value withName: (NSString *) nameWithSpecialCharacter;
+- (SQLite3Status) bindPropertyList: (id)         value withName: (NSString *) nameWithSpecialCharacter format: (NSPropertyListFormat) format;
 
 - (SQLite3Status) bindBOOL:   (BOOL)       value withName: (NSString *) nameWithSpecialCharacter;
 - (SQLite3Status) bindInt32:  (int32_t)    value withName: (NSString *) nameWithSpecialCharacter;

@@ -283,6 +283,52 @@ inline bool SQLite3ConnectionGetBOOLWithQuery(SQLite3ConnectionRef connection, C
   return value;
 }
 
+inline CFTypeRef SQLite3ConnectionCreateCFTypeWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
+  CFTypeRef value = NULL;
+  if (connection) {
+    if (sql) {
+      SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+      if (statement) {
+        if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
+          switch (SQLite3StatementGetColumnType(statement, 0)) {
+            case kSQLite3TypeNULL:
+              value = kCFNull;
+              break;
+              
+            case kSQLite3TypeInteger:
+            case kSQLite3TypeFloat:
+              value = SQLite3StatementCreateNumberWithColumn(statement, 0);
+              break;
+              
+            case kSQLite3TypeString:
+              value = SQLite3StatementCreateStringWithColumn(statement, 0);
+              break;
+              
+            case kSQLite3TypeData:
+              value = SQLite3StatementCreateDataWithColumn(statement, 0);
+              break;
+          }
+        }
+        SQLite3StatementReset(statement);
+        SQLite3StatementFinalize(statement);
+        SQLite3StatementRelease(statement);
+      }
+    }
+  }
+  return value;
+}
+
+inline CFNumberRef SQLite3ConnectionCreateNumberWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
+  CFNumberRef value = NULL;
+  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+  if (kSQLite3StatusRow == SQLite3StatementStep(statement))
+    value = SQLite3StatementCreateNumberWithColumn(statement, 0);
+  SQLite3StatementReset(statement);
+  SQLite3StatementFinalize(statement);
+  SQLite3StatementRelease(statement);
+  return value;
+}
+
 inline CFStringRef SQLite3ConnectionCreateStringWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
   CFStringRef value = NULL;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
@@ -331,7 +377,7 @@ inline CFDictionaryRef SQLite3ConnectionCreateDictionaryForAllColumnsWithQuery(S
   CFDictionaryRef value = NULL;
   SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
   if (kSQLite3StatusRow == SQLite3StatementStep(statement))
-    value = SQLite3StatementCreateDictionaryWithAllColumns(statement);
+    value = SQLite3StatementCreateDictionaryForAllColumns(statement);
   SQLite3StatementReset(statement);
   SQLite3StatementFinalize(statement);
   SQLite3StatementRelease(statement);
@@ -351,6 +397,82 @@ inline CFPropertyListRef SQLite3ConnectionCreatePropertyListWithQuery(SQLite3Con
   return value;
 }
 
+inline CFArrayRef SQLite3ConnectionCreateArrayForFirstRowWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
+  CFArrayRef array = NULL;
+  if (connection) {
+    if (sql) {
+      SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+      if (statement) {
+        if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
+          array = SQLite3StatementCreateArrayForAllColumns(statement);
+        }
+        SQLite3StatementFinalize(statement);
+        SQLite3StatementRelease(statement);
+      }
+    }
+  }
+  return array;
+}
+
+CFDictionaryRef SQLite3ConnectionCreateDictionaryForFirstRowWithQuery(SQLite3ConnectionRef connection, CFStringRef sql) {
+  CFDictionaryRef dictionary = NULL;
+  if (connection) {
+    if (sql) {
+      SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+      if (statement) {
+        if (kSQLite3StatusRow == SQLite3StatementStep(statement)) {
+          dictionary = SQLite3StatementCreateDictionaryForAllColumns(statement);
+        }
+        SQLite3StatementFinalize(statement);
+        SQLite3StatementRelease(statement);
+      }
+    }
+  }
+  return dictionary;
+}
+
+bool SQLite3ConnectionDoesTableOrViewHaveRowWithID(SQLite3ConnectionRef connection, CFStringRef name, int64_t rowID) {
+  bool result = 0;
+  if (connection) {
+    if (name) {
+      CFStringRef sql = CFStringCreateWithFormat(connection->allocator, NULL, CFSTR("select 1 from %@ where _rowid_ = %ll"), name, rowID);
+      if (sql) {
+        result = SQLite3ConnectionGetBOOLWithQuery(connection, sql);
+        CFRelease(sql);
+      }
+    }
+  }
+  return result;
+}
+
+CFArrayRef SQLite3ConnectionCreateArrayWithTableOrViewForRowID(SQLite3ConnectionRef connection, CFStringRef name, int64_t rowID) {
+  CFArrayRef array = NULL;
+  if (connection) {
+    if (name) {
+      CFStringRef sql = CFStringCreateWithFormat(connection->allocator, NULL, CFSTR("select * from %@ where _rowid_ = %ll"), name, rowID);
+      if (sql) {
+        array = SQLite3ConnectionCreateArrayForFirstRowWithQuery(connection, sql);
+        CFRelease(sql);
+      }
+    }
+  }
+  return array;
+}
+
+CFDictionaryRef SQLite3ConnectionCreateDictionaryWithTableOrViewForRowID(SQLite3ConnectionRef connection, CFStringRef name, int64_t rowID) {
+  CFDictionaryRef dictionary = NULL;
+  if (connection) {
+    if (name) {
+      CFStringRef sql = CFStringCreateWithFormat(connection->allocator, NULL, CFSTR("select * from %@ where _rowid_ = %ll"), name, rowID);
+      if (sql) {
+        dictionary = SQLite3ConnectionCreateDictionaryForFirstRowWithQuery(connection, sql);
+        CFRelease(sql);
+      }
+    }
+  }
+  return dictionary;
+}
+
 #pragma Utility functions
 
 inline SQLite3Status SQLite3ConnectionDropTable(SQLite3ConnectionRef connection, CFStringRef name) {
@@ -366,10 +488,15 @@ inline SQLite3Status SQLite3ConnectionDropIndex(SQLite3ConnectionRef connection,
 }
 
 inline SQLite3Status SQLite3ConnectionDropTableIfExists(SQLite3ConnectionRef connection, CFStringRef name) {
-  SQLite3Status status = kSQLite3StatusOK;
-  if (SQLite3ConnectionDoesTableExist(connection, name))
-    status = SQLite3ConnectionDropTable(connection, name);
-  return status;
+  return SQLite3ConnectionExecutev(connection, CFSTR("drop table if exists %@;"), name); // TODO:
+}
+
+inline SQLite3Status SQLite3ConnectionDropViewIfExists(SQLite3ConnectionRef connection, CFStringRef name) {
+  return SQLite3ConnectionExecutev(connection, CFSTR("drop view if exists %@;"), name); // TODO:
+}
+
+inline SQLite3Status SQLite3ConnectionDropIndexIfExists(SQLite3ConnectionRef connection, CFStringRef name) {
+  return SQLite3ConnectionExecutev(connection, CFSTR("drop index if exists %@;"), name); // TODO:
 }
 
 inline bool SQLite3ConnectionDoesTableExist(SQLite3ConnectionRef connection, CFStringRef name) {

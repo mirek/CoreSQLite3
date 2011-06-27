@@ -125,55 +125,68 @@ void TestUpdateCallbackCallback1(SQLite3ConnectionRef connection, SQLite3Action 
 //  [connection dropTableWithName: @"test_update_callback"];
 //}
 
-//- (void) testCreateUsersTable {
-//  NSError *error = nil;
-//  
-//  SQLite3ConnectionDropTableIfExists(connection, CFSTR("users"));
-//  
-//  SQLite3ConnectionExecute(connection, (CFStringRef)@"create table users(id int primary key, username varchar, name varchar, surname varchar, data text)");
-//  STAssertNil(error = (NSError *)SQLite3ConnectionCreateError(connection), @"Connection should't have error %@", error);
-//  
-//  NSDictionary *user = [[NSDictionary alloc] initWithObjectsAndKeys:
-//                        [NSNumber numberWithInt: 1], @"id",
-//                        @"mirek", @"username",
-//                        @"Mirek", @"name",
-//                        @"Rusin", @"surname",
-//                        nil];
-//  
-//  NSArray *userArray = [[NSArray alloc] initWithObjects: @"mirek2", @"Mirek", @"Rusin", nil];
-//  
-//  [connection executeWithQuery: @"insert into users(name, username, surname) values(:name, :username, :surname)" dictionary: user];
-//  [connection executeWithQuery: @"insert into users(username, name, surname) values(?, ?, ?)" array: userArray];
-//  
-//  STAssertEquals(2, [connection int32WithQuery: @"select count(*) from users"], @"Should be 2 users");
-//
-//  {
-//    NSDictionary *preferences = [NSDictionary dictionaryWithObjectsAndKeys:
-//                                 [NSArray arrayWithObjects: @"English", @"German", nil], @"languages",
-//                                 @"English", @"preferred",
-//                                 nil];
-//    
-//    SQLite3StatementRef statement = SQLite3StatementCreate(connection, CFSTR("insert into users(data) values(?)"));
-//    SQLite3StatementBindPropertyList(statement, 1, preferences, kCFPropertyListXMLFormat_v1_0);
-//    if (kSQLite3StatusDone != SQLite3StatementStep(statement)) {
-//      STAssertTrue(NO, @"Insert should return done");
-//    }
-//    SQLite3StatementReset(statement);
-//    SQLite3StatementClearBindings(statement);
-//    SQLite3StatementFinalize(statement);
-//    SQLite3StatementRelease(statement);
-//    
-//    STAssertEquals(1, SQLite3ConnectionGetInt32WithQuery(connection, CFSTR("select count(*) from users where data is not null")), @"Should be one user with data");
-//    CFPropertyListRef propertyList = SQLite3ConnectionCreatePropertyListWithQuery(connection, CFSTR("select data from users where data is not null"), kCFPropertyListImmutable, NULL);
-//    STAssertNotNil(propertyList, @"Property list shouldn't be nil");
-//    CFRelease(propertyList);
-//  }
-//  
-//  SQLite3ConnectionDropTableIfExists(connection, CFSTR("users"));
-//  
-//  [user release];
-//  
-//  [error release];
-//}
+- (void) testCreateUsersTable {
+  NSError *error = nil;
+  
+  [connection dropTableIfExists: @"users"];
+  [connection execute: @"create table users(id int primary key, username varchar, name varchar, surname varchar, data text)"];
+//  STAssertFalse([connection hasErrorStatus]);
+  
+  NSDictionary *user = [[NSDictionary alloc] initWithObjectsAndKeys:
+                        [NSNumber numberWithInt: 1], @"id",
+                        @"mirek", @"username",
+                        @"Mirek", @"name",
+                        @"Rusin", @"surname",
+                        nil];
+  
+  NSArray *userArray = [[NSArray alloc] initWithObjects: @"mirek2", @"Mirek2", @"Rusin2", nil];
+  
+  [connection execute: @"insert into users(name, username, surname) values(:name, :username, :surname)" withDictionaryBindings: user];
+  [connection execute: @"insert into users(username, name, surname) values(?, ?, ?)" withArrayBindings: userArray];
+  
+  STAssertEquals(2, [connection intWithQuery: @"select count(*) from users"], @"Should have 2 users");
+
+  {
+    NSDictionary *preferences = [NSDictionary dictionaryWithObjectsAndKeys:
+                                 [NSArray arrayWithObjects: @"English", @"German", nil], @"languages",
+                                 @"English", @"preferred",
+                                 nil];
+    
+    SQLite3Statement *statement = [connection createStatementWithQuery: @"update users set data = :data where name = :name"];
+    
+    [statement bindString: @"Mirek" withName: @":name"];
+    [statement bindPropertyList: preferences withName: @":data" format: kCFPropertyListXMLFormat_v1_0];
+    if (kSQLite3StatusDone != [statement step]) {
+      STAssertTrue(NO, @"Insert should return done");
+    }
+    
+    // Let's clear all previous bindings and reset the statement so we can use it again
+    [statement clearBindings];
+    [statement reset];
+    
+    [statement bindWithDictionary: [NSDictionary dictionaryWithObjectsAndKeys:
+                                    @"Rafal", @":name",
+                                    @"{ foo: bar }", @":data",
+                                    nil]];
+    
+    if (kSQLite3StatusDone != [statement step]) {
+      STAssertTrue(NO, @"Insert should return done");
+    }
+    
+    // Releasing the statement will clear all bindings, finalize the statement and release the object
+    [statement release];
+    
+    STAssertEquals(1, SQLite3ConnectionGetInt32WithQuery(connection.connection, CFSTR("select count(*) from users where data is not null")), @"Should be one user with data");
+    CFPropertyListRef propertyList = SQLite3ConnectionCreatePropertyListWithQuery(connection.connection, CFSTR("select data from users where data is not null"), kCFPropertyListImmutable, NULL);
+    STAssertNotNil(propertyList, @"Property list shouldn't be nil");
+    CFRelease(propertyList);
+  }
+  
+  SQLite3ConnectionDropTableIfExists(connection.connection, CFSTR("users"));
+  
+  [user release];
+  
+  [error release];
+}
 
 @end

@@ -57,6 +57,14 @@
   [super dealloc];
 }
 
+- (SQLite3Status) step {
+  return SQLite3StatementStep(statement);
+}
+
+- (SQLite3Status) reset {
+  return SQLite3StatementReset(statement);
+}
+
 #pragma mark Column info
 
 - (NSInteger) columnCount {
@@ -72,6 +80,10 @@
 }
 
 #pragma mark Bindings
+
+- (SQLite3Status) clearBindings {
+  return SQLite3StatementClearBindings(statement);
+}
 
 - (NSInteger) bindParameterIndexWithName: (NSString *) nameWithSpecialCharacter {
   return SQLite3StatementGetBindParameterIndexWithName(statement, (CFStringRef)nameWithSpecialCharacter);
@@ -89,12 +101,26 @@
   return [[self createBindParameterNameWithIndex: _1BasedIndex withoutSpecialCharacter: withoutSpecialCharacter] autorelease];
 }
 
-- (SQLite3Status) bindArray: (NSArray *) array {
-  return SQLite3StatementBindArray(statement, (CFArrayRef)array);
+#pragma mark Index based
+
+- (SQLite3Status) bindNilWithIndex: (NSInteger) _1BasedIndex {
+  return SQLite3StatementBindNULL(statement, _1BasedIndex);
 }
 
-- (SQLite3Status) bindDictionary: (NSDictionary *) dictionary {
-  return SQLite3StatementBindDictionary(statement, (CFDictionaryRef)dictionary);
+- (SQLite3Status) bindBOOL: (BOOL) value withIndex: (NSInteger) _1BasedIndex {
+  return SQLite3StatementBindBool(statement, _1BasedIndex, value);
+}
+
+- (SQLite3Status) bindInt32: (int32_t) value withIndex: (NSInteger) _1BasedIndex {
+  return SQLite3StatementBindInt32(statement, _1BasedIndex, value);
+}
+
+- (SQLite3Status) bindInt64: (int64_t) value withIndex: (NSInteger) _1BasedIndex {
+  return SQLite3StatementBindInt64(statement, _1BasedIndex, value);
+}
+
+- (SQLite3Status) bindDouble: (double_t) value withIndex: (NSInteger) _1BasedIndex {
+  return SQLite3StatementBindDouble(statement, _1BasedIndex, value);
 }
 
 - (SQLite3Status) bindObject: (id) value withIndex: (NSInteger) _1BasedIndex {
@@ -117,20 +143,34 @@
   return SQLite3StatementBindData(statement, _1BasedIndex, (CFDataRef)value);
 }
 
-- (SQLite3Status) bindBOOL: (BOOL) value withIndex: (NSInteger) _1BasedIndex {
-  return SQLite3StatementBindBool(statement, _1BasedIndex, value);
+- (SQLite3Status) bindPropertyList: (id) value withIndex: (NSInteger) _1BasedIndex format: (NSPropertyListFormat) format {
+  return SQLite3StatementBindPropertyList(statement, _1BasedIndex, (CFPropertyListRef)value, format);
 }
 
-- (SQLite3Status) bindInt32: (int32_t) value withIndex: (NSInteger) _1BasedIndex {
-  return SQLite3StatementBindInt32(statement, _1BasedIndex, value);
+- (SQLite3Status) bindWithArray: (NSArray *) array {
+  return SQLite3StatementBindArray(statement, (CFArrayRef)array);
 }
 
-- (SQLite3Status) bindInt64: (int64_t) value withIndex: (NSInteger) _1BasedIndex {
-  return SQLite3StatementBindInt64(statement, _1BasedIndex, value);
+#pragma mark Name based
+
+- (SQLite3Status) bindNilWithName: (NSString *) name {
+  return SQLite3StatementBindNULLWithName(statement, (CFStringRef)name);
 }
 
-- (SQLite3Status) bindDouble: (double_t) value withIndex: (NSInteger) _1BasedIndex {
-  return SQLite3StatementBindDouble(statement, _1BasedIndex, value);
+- (SQLite3Status) bindBOOL: (BOOL) value withName: (NSString *) name {
+  return SQLite3StatementBindBoolWithName(statement, (CFStringRef)name, value);
+}
+
+- (SQLite3Status) bindInt32: (int32_t) value withName: (NSString *) name {
+  return SQLite3StatementBindInt32WithName(statement, (CFStringRef)name, value);
+}
+
+- (SQLite3Status) bindInt64: (int64_t) value withName: (NSString *) name {
+  return SQLite3StatementBindInt64WithName(statement, (CFStringRef)name, value);
+}
+
+- (SQLite3Status) bindDouble: (double_t) value withName: (NSString *) name {
+  return SQLite3StatementBindDoubleWithName(statement, (CFStringRef)name, value);
 }
 
 - (SQLite3Status) bindObject: (id) value withName: (NSString *) nameWithSpecialCharacter {
@@ -153,24 +193,8 @@
   return SQLite3StatementBindDataWithName(statement, (CFStringRef)name, (CFDataRef)value);
 }
 
-- (SQLite3Status) bindBOOL: (BOOL) value withName: (NSString *) name {
-  return SQLite3StatementBindBoolWithName(statement, (CFStringRef)name, value);
-}
-
-- (SQLite3Status) bindInt32: (int32_t) value withName: (NSString *) name {
-  return SQLite3StatementBindInt32WithName(statement, (CFStringRef)name, value);
-}
-
-- (SQLite3Status) bindInt64: (int64_t) value withName: (NSString *) name {
-  return SQLite3StatementBindInt64WithName(statement, (CFStringRef)name, value);
-}
-
-- (SQLite3Status) bindDouble: (double_t) value withName: (NSString *) name {
-  return SQLite3StatementBindDoubleWithName(statement, (CFStringRef)name, value);
-}
-
-- (SQLite3Status) bindWithArray: (NSArray *) array {
-  return SQLite3StatementBindArray(statement, (CFArrayRef)array);
+- (SQLite3Status) bindPropertyList: (id) value withName: (NSString *) nameWithSpecialCharacter format: (NSPropertyListFormat) format {
+  return SQLite3StatementBindPropertyListWithName(statement, (CFStringRef)nameWithSpecialCharacter, (CFPropertyListRef)value, format);
 }
 
 - (SQLite3Status) bindWithDictionary: (NSDictionary *) dictionary {
@@ -315,7 +339,7 @@
   if (state->extra[0] == kSQLite3StatusRow) {
     state->itemsPtr = stackbuf;
     while (kSQLite3StatusRow == (state->extra[0] = SQLite3StatementStep(statement)) && (count < len) ) {
-      stackbuf[count] = [(id)SQLite3StatementCreateDictionaryWithAllColumns(statement) autorelease];
+      stackbuf[count] = [(id)SQLite3StatementCreateDictionaryForAllColumns(statement) autorelease];
       state->state++;
       count++;
     }
