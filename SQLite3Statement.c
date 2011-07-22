@@ -218,7 +218,7 @@ inline SQLite3Status SQLite3StatementBindString(SQLite3StatementRef statement, C
   if (value) {
     CFDataRef valueData = CFStringCreateExternalRepresentation(statement->allocator, value, kCFStringEncodingUTF8, 0);
     if (valueData) {
-      status = sqlite3_bind_text(statement->stmt, (int)index, (const char *)CFDataGetBytePtr(valueData), -1, SQLITE_TRANSIENT);
+      status = sqlite3_bind_text(statement->stmt, (int)index, (const char *)CFDataGetBytePtr(valueData), (int)CFDataGetLength(valueData), SQLITE_TRANSIENT);
       CFRelease(valueData);
     }
   } else {
