@@ -22,9 +22,8 @@ inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQL
       const char* sqlCString = NULL;
       const char* useSqlCString = NULL;
       char* freeSqlCString = NULL;
-      size_t sqlCStringSize = -1;
       
-      useSqlCString = _CFStringGetCString(sql, &freeSqlCString, &sqlCStringSize);
+      useSqlCString = _CFStringGetCString(sql, &freeSqlCString);
       if (NULL == useSqlCString) {
         sqlCString = freeSqlCString;
       } else {
@@ -32,7 +31,7 @@ inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQL
       }
       
       if (sqlCString) {
-        SQLite3Status status = sqlite3_prepare_v2(connection->db, sqlCString, sqlCStringSize, &statement->stmt, NULL);
+        SQLite3Status status = sqlite3_prepare_v2(connection->db, sqlCString, -1, &statement->stmt, NULL);
         if (kSQLite3StatusOK != status) {
           if (error) {
             *error = CFErrorCreate(allocator, CFSTR("com.github.mirek.SQLite3"), status, NULL);
@@ -189,7 +188,7 @@ inline CFIndex SQLite3StatementGetBindParameterIndexWithName(SQLite3StatementRef
     const char* useNameCString = NULL;
     char* freeNameCString = NULL;
     
-    useNameCString = _CFStringGetCString(name, &freeNameCString, NULL);
+    useNameCString = _CFStringGetCString(name, &freeNameCString);
     if (NULL == useNameCString) {
       nameCString = freeNameCString;
     } else {
@@ -247,9 +246,8 @@ inline SQLite3Status SQLite3StatementBindString(SQLite3StatementRef statement, C
     const char* valueCString = NULL;
     const char* useValueCString = NULL;
     char* freeValueCString = NULL;
-    size_t valueCStringSize = -1;
     
-    useValueCString = _CFStringGetCString(value, &freeValueCString, &valueCStringSize);
+    useValueCString = _CFStringGetCString(value, &freeValueCString);
     if (NULL == useValueCString) {
       valueCString = freeValueCString;
     } else {
@@ -257,7 +255,7 @@ inline SQLite3Status SQLite3StatementBindString(SQLite3StatementRef statement, C
     }
     
     if (valueCString) {
-      status = sqlite3_bind_text(statement->stmt, (int)index, valueCString, valueCStringSize, SQLITE_TRANSIENT);
+      status = sqlite3_bind_text(statement->stmt, (int)index, valueCString, -1, SQLITE_TRANSIENT);
 
       if (freeValueCString != NULL) {
         free(freeValueCString);
@@ -484,7 +482,7 @@ inline CFIndex SQLite3StatementGetColumnIndexWithName(SQLite3StatementRef statem
     const char* useNameCString = NULL;
     char* freeNameCString = NULL;
     
-    useNameCString = _CFStringGetCString(name, &freeNameCString, NULL);
+    useNameCString = _CFStringGetCString(name, &freeNameCString);
     if (NULL == useNameCString) {
       nameCString = freeNameCString;
     } else {

@@ -15,18 +15,20 @@
 // Converted string is contained in method return or in cString.
 // Returns const char* which doesn't need to be freed, otherwise NULL
 // cString has to be free'd though if not NULL
-inline const char* _CFStringGetCString(CFStringRef cfString, char** cString, size_t* cStringLength) {
+inline const char* _CFStringGetCString(CFStringRef cfString, char** cString) {
   const char* useUTF8StringPtr = NULL;
   char* freeUTF8StringPtr = NULL;
 
-  CFIndex stringLength = CFStringGetLength(cfString);
   useUTF8StringPtr = CFStringGetCStringPtr(cfString, kCFStringEncodingUTF8);
 
   if (NULL == useUTF8StringPtr) {
-    freeUTF8StringPtr = calloc(1L, stringLength + 1L);
+    CFIndex stringLength = CFStringGetLength(cfString);
+    CFIndex maximumSize = CFStringGetMaximumSizeForEncoding(stringLength, kCFStringEncodingUTF8);
+
+    freeUTF8StringPtr = calloc(1L, maximumSize + 1L);
     
     if (freeUTF8StringPtr != NULL) {
-      Boolean success = CFStringGetCString(cfString, freeUTF8StringPtr, stringLength + 1L, kCFStringEncodingUTF8);
+      Boolean success = CFStringGetCString(cfString, freeUTF8StringPtr, maximumSize + 1L, kCFStringEncodingUTF8);
       
       if (!success) {
         free(freeUTF8StringPtr);
@@ -37,10 +39,6 @@ inline const char* _CFStringGetCString(CFStringRef cfString, char** cString, siz
     }
   }
 
-  if (cStringLength != NULL) {
-    *cStringLength = stringLength;
-  }
-  
   return useUTF8StringPtr;
 }
 
@@ -63,7 +61,7 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
     const char* usePathCString = NULL;
     char* freePathCString = NULL;
     
-    usePathCString = _CFStringGetCString(path, &freePathCString, NULL);
+    usePathCString = _CFStringGetCString(path, &freePathCString);
     if (NULL == usePathCString) {
       pathCString = freePathCString;
     } else {
@@ -198,7 +196,7 @@ SQLite3Status SQLite3ConnectionRegisterFunction(SQLite3ConnectionRef connection,
       const char* useNameCString = NULL;
       char* freeNameCString = NULL;
       
-      useNameCString = _CFStringGetCString(name, &freeNameCString, NULL);
+      useNameCString = _CFStringGetCString(name, &freeNameCString);
       if (NULL == useNameCString) {
         nameCString = freeNameCString;
       } else {
@@ -258,7 +256,7 @@ inline SQLite3Status SQLite3ConnectionExecute(SQLite3ConnectionRef connection, C
     const char* useSqlCString = NULL;
     char* freeSqlCString = NULL;
     
-    useSqlCString = _CFStringGetCString(sql, &freeSqlCString, NULL);
+    useSqlCString = _CFStringGetCString(sql, &freeSqlCString);
     if (NULL == useSqlCString) {
       sqlCString = freeSqlCString;
     } else {

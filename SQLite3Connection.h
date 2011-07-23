@@ -7,7 +7,7 @@
 
 #include "CoreSQLite3.h"
 
-const char* _CFStringGetCString(CFStringRef cfString, char** cString, size_t* cStringLength);
+const char* _CFStringGetCString(CFStringRef cfString, char** cString);
 
        SQLite3ConnectionRef _SQLite3ConnectionCreate (CFAllocatorRef allocator, CFStringRef path, SQLite3OpenOptions flags, const char *zVfs);
 extern SQLite3ConnectionRef  SQLite3ConnectionCreate (CFAllocatorRef allocator, CFStringRef path, SQLite3OpenOptions flags, const char *zVfs);

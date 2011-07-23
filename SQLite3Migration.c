@@ -57,7 +57,7 @@ CFMutableArrayRef SQlite3MigrationCreateURLsArrayWithDirectoryURL(CFAllocatorRef
     const char* useDirectoryCString = NULL;
     char* freeDirectoryCString = NULL;
     
-    useDirectoryCString = _CFStringGetCString(directory, &freeDirectoryCString, NULL);
+    useDirectoryCString = _CFStringGetCString(directory, &freeDirectoryCString);
     if (NULL == useDirectoryCString) {
       directoryCString = freeDirectoryCString;
     } else {
