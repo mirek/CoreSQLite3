@@ -11,6 +11,37 @@
 
 #pragma Lifecycle
 
+// Converts CFString into (const) char* representation.
+// Converted string is contained in method return or in cString.
+// Returns const char* which doesn't need to be freed, otherwise NULL
+// cString has to be free'd though if not NULL
+inline const char* _CFStringGetCString(CFStringRef cfString, char** cString) {
+  const char* useUTF8StringPtr = NULL;
+  char* freeUTF8StringPtr = NULL;
+
+  useUTF8StringPtr = CFStringGetCStringPtr(cfString, kCFStringEncodingUTF8);
+
+  if (NULL == useUTF8StringPtr) {
+    CFIndex stringLength = CFStringGetLength(cfString);
+    CFIndex maximumSize = CFStringGetMaximumSizeForEncoding(stringLength, kCFStringEncodingUTF8);
+
+    freeUTF8StringPtr = calloc(1L, maximumSize + 1L);
+    
+    if (freeUTF8StringPtr != NULL) {
+      Boolean success = CFStringGetCString(cfString, freeUTF8StringPtr, maximumSize + 1L, kCFStringEncodingUTF8);
+      
+      if (!success) {
+        free(freeUTF8StringPtr);
+        freeUTF8StringPtr = NULL;
+      } else {
+        *cString = freeUTF8StringPtr;
+      }
+    }
+  }
+
+  return useUTF8StringPtr;
+}
+
 inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, CFStringRef path, SQLite3OpenOptions flags, const char *zVfs) {
   SQLite3ConnectionRef connection = CFAllocatorAllocate(allocator, sizeof(__SQLite3Connection), 0);
   if (connection) {
@@ -26,9 +57,20 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
     connection->defaultDateFormatter = CFDateFormatterCreate(allocator, NULL, kCFDateFormatterNoStyle, kCFDateFormatterNoStyle);
     CFDateFormatterSetFormat(connection->defaultDateFormatter, CFSTR("yyyy-MM-dd HH:mm:ss.SSS"));
     
-    CFDataRef pathData = CFStringCreateExternalRepresentation(connection->allocator, path, kCFStringEncodingUTF8, 0);
-    if (pathData) {
-      if (kSQLite3StatusOK == sqlite3_open_v2((const char *)CFDataGetBytePtr(pathData), &connection->db, flags, zVfs)) {
+    const char* pathCString = NULL;
+    const char* usePathCString = NULL;
+    char* freePathCString = NULL;
+    
+    usePathCString = _CFStringGetCString(path, &freePathCString);
+    if (NULL == usePathCString) {
+      pathCString = freePathCString;
+    } else {
+      pathCString = usePathCString;
+    }
+
+    if (pathCString != NULL) {
+      
+      if (kSQLite3StatusOK == sqlite3_open_v2(pathCString, &connection->db, flags, zVfs)) {
         
         // All ok
       } else {
@@ -36,7 +78,10 @@ inline SQLite3ConnectionRef _SQLite3ConnectionCreate(CFAllocatorRef allocator, C
         // Move to SQLite3ConnectionCreateWithError, otherwise we don't know what happened
         connection = SQLite3ConnectionRelease(connection);
       }
-      CFRelease(pathData);
+      
+      if (freePathCString != NULL) {
+        free(freePathCString);
+      }
     } else {
       
       // Move to SQLite3ConnectionCreateWithError, otherwise we don't know what happened
@@ -147,10 +192,23 @@ SQLite3Status SQLite3ConnectionRegisterFunction(SQLite3ConnectionRef connection,
   SQLite3Status status = kSQLite3StatusError;
   if (connection) {
     if (name) {
-      CFDataRef nameData = CFStringCreateExternalRepresentation(connection->allocator, name, kCFStringEncodingUTF8, 0);
-      if (nameData) {
-        status = sqlite3_create_function_v2(connection->db, (const char *)CFDataGetBytePtr(nameData), (int)argc, SQLITE_ANY, NULL, f, NULL, NULL, NULL);
-        CFRelease(nameData);
+      const char* nameCString = NULL;
+      const char* useNameCString = NULL;
+      char* freeNameCString = NULL;
+      
+      useNameCString = _CFStringGetCString(name, &freeNameCString);
+      if (NULL == useNameCString) {
+        nameCString = freeNameCString;
+      } else {
+        nameCString = useNameCString;
+      }
+
+      if (nameCString != NULL) {
+        status = sqlite3_create_function_v2(connection->db, nameCString, (int)argc, SQLITE_ANY, NULL, f, NULL, NULL, NULL);
+        
+        if (freeNameCString != NULL) {
+          free(freeNameCString);
+        }
       }
     }
   }
@@ -194,10 +252,23 @@ inline SQLite3Status SQLite3ConnectionExecutev(SQLite3ConnectionRef connection, 
 inline SQLite3Status SQLite3ConnectionExecute(SQLite3ConnectionRef connection, CFStringRef sql) {
   SQLite3Status status = kSQLite3StatusError;
   if (sql) {
-    CFDataRef sqlData = CFStringCreateExternalRepresentation(connection->allocator, sql, kCFStringEncodingUTF8, 0);
-    if (sqlData) {
-      status = sqlite3_exec(connection->db, (const char *)CFDataGetBytePtr(sqlData), NULL, NULL, NULL);
-      CFRelease(sqlData);
+    const char* sqlCString = NULL;
+    const char* useSqlCString = NULL;
+    char* freeSqlCString = NULL;
+    
+    useSqlCString = _CFStringGetCString(sql, &freeSqlCString);
+    if (NULL == useSqlCString) {
+      sqlCString = freeSqlCString;
+    } else {
+      sqlCString = useSqlCString;
+    }
+    
+    if (sqlCString) {
+      status = sqlite3_exec(connection->db, sqlCString, NULL, NULL, NULL);
+
+      if (freeSqlCString != NULL) {
+        free(freeSqlCString);
+      }
     }
   }
   return status;

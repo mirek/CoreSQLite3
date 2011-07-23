@@ -52,9 +52,20 @@ CFMutableArrayRef SQlite3MigrationCreateURLsArrayWithDirectoryURL(CFAllocatorRef
   CFMutableArrayRef array = NULL;
   if (directoryURL) {
     CFStringRef directory = CFURLCopyFileSystemPath(directoryURL, kCFURLPOSIXPathStyle);
-    CFDataRef directoryData = CFStringCreateExternalRepresentation(allocator, directory, kCFStringEncodingUTF8, 0);
-    if (directoryData) {
-      DIR *dir = opendir((const char *)CFDataGetBytePtr(directoryData));
+
+    const char* directoryCString = NULL;
+    const char* useDirectoryCString = NULL;
+    char* freeDirectoryCString = NULL;
+    
+    useDirectoryCString = _CFStringGetCString(directory, &freeDirectoryCString);
+    if (NULL == useDirectoryCString) {
+      directoryCString = freeDirectoryCString;
+    } else {
+      directoryCString = useDirectoryCString;
+    }
+
+    if (directoryCString) {
+      DIR *dir = opendir(directoryCString);
       struct dirent *ent = NULL;
       if (dir != NULL) {
         array = CFArrayCreateMutable(allocator, 0, &kCFTypeArrayCallBacks);
@@ -76,7 +87,10 @@ CFMutableArrayRef SQlite3MigrationCreateURLsArrayWithDirectoryURL(CFAllocatorRef
           CFRelease(filename);
         }
       }
-      CFRelease(directoryData);
+      
+      if (freeDirectoryCString != NULL) {
+        free(freeDirectoryCString);
+      }
     }
     CFRelease(directory);
   }

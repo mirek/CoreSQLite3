@@ -18,9 +18,20 @@ inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQL
       statement->allocator = allocator ? CFRetain(allocator) : NULL; // ...and allocator if not null
       statement->retainCount = 1;
       statement->stmt = NULL;
-      CFDataRef sqlData = CFStringCreateExternalRepresentation(statement->allocator, sql, kCFStringEncodingUTF8, 0);
-      if (sqlData) {
-        SQLite3Status status = sqlite3_prepare_v2(connection->db, (const char *)CFDataGetBytePtr(sqlData), -1, &statement->stmt, NULL);
+
+      const char* sqlCString = NULL;
+      const char* useSqlCString = NULL;
+      char* freeSqlCString = NULL;
+      
+      useSqlCString = _CFStringGetCString(sql, &freeSqlCString);
+      if (NULL == useSqlCString) {
+        sqlCString = freeSqlCString;
+      } else {
+        sqlCString = useSqlCString;
+      }
+      
+      if (sqlCString) {
+        SQLite3Status status = sqlite3_prepare_v2(connection->db, sqlCString, -1, &statement->stmt, NULL);
         if (kSQLite3StatusOK != status) {
           if (error) {
             *error = CFErrorCreate(allocator, CFSTR("com.github.mirek.SQLite3"), status, NULL);
@@ -28,7 +39,10 @@ inline SQLite3StatementRef _SQLite3StatementCreate(CFAllocatorRef allocator, SQL
           printf("ERROR: %s\n", sqlite3_errmsg(connection->db));
           statement = SQLite3StatementRelease(statement); // ...will be set to NULL
         }
-        CFRelease(sqlData);
+
+        if (freeSqlCString != NULL) {
+          free(freeSqlCString);
+        }
       }
     }
   }
@@ -170,10 +184,23 @@ inline CFStringRef SQLite3StatementCreateSQLString(SQLite3StatementRef statement
 inline CFIndex SQLite3StatementGetBindParameterIndexWithName(SQLite3StatementRef statement, CFStringRef name) {
   int index = 0;
   if (name) {
-    CFDataRef nameData = CFStringCreateExternalRepresentation(statement->allocator, name, kCFStringEncodingUTF8, 0);
-    if (nameData) {
-      index = sqlite3_bind_parameter_index(statement->stmt, (const char *)CFDataGetBytePtr(nameData));
-      CFRelease(nameData);
+    const char* nameCString = NULL;
+    const char* useNameCString = NULL;
+    char* freeNameCString = NULL;
+    
+    useNameCString = _CFStringGetCString(name, &freeNameCString);
+    if (NULL == useNameCString) {
+      nameCString = freeNameCString;
+    } else {
+      nameCString = useNameCString;
+    }
+    
+    if (nameCString) {
+      index = sqlite3_bind_parameter_index(statement->stmt, nameCString);
+
+      if (freeNameCString != NULL) {
+        free(freeNameCString);
+      }
     }
   }
   return index;
@@ -216,10 +243,23 @@ inline SQLite3Status SQLite3StatementBindDouble(SQLite3StatementRef statement, C
 inline SQLite3Status SQLite3StatementBindString(SQLite3StatementRef statement, CFIndex index, CFStringRef value) {
   SQLite3Status status = kSQLite3StatusError;
   if (value) {
-    CFDataRef valueData = CFStringCreateExternalRepresentation(statement->allocator, value, kCFStringEncodingUTF8, 0);
-    if (valueData) {
-      status = sqlite3_bind_text(statement->stmt, (int)index, (const char *)CFDataGetBytePtr(valueData), (int)CFDataGetLength(valueData), SQLITE_TRANSIENT);
-      CFRelease(valueData);
+    const char* valueCString = NULL;
+    const char* useValueCString = NULL;
+    char* freeValueCString = NULL;
+    
+    useValueCString = _CFStringGetCString(value, &freeValueCString);
+    if (NULL == useValueCString) {
+      valueCString = freeValueCString;
+    } else {
+      valueCString = useValueCString;
+    }
+    
+    if (valueCString) {
+      status = sqlite3_bind_text(statement->stmt, (int)index, valueCString, -1, SQLITE_TRANSIENT);
+
+      if (freeValueCString != NULL) {
+        free(freeValueCString);
+      }
     }
   } else {
     status = SQLite3StatementBindNULL(statement, index);
@@ -438,16 +478,29 @@ inline CFStringRef SQLite3StatementCreateColumnNameWithIndex(SQLite3StatementRef
 inline CFIndex SQLite3StatementGetColumnIndexWithName(SQLite3StatementRef statement, CFStringRef name) {
   CFIndex index = -1;
   if (name) {
-    CFDataRef nameData = CFStringCreateExternalRepresentation(statement->allocator, name, kCFStringEncodingUTF8, 0);
-    if (nameData) {
+    const char* nameCString = NULL;
+    const char* useNameCString = NULL;
+    char* freeNameCString = NULL;
+    
+    useNameCString = _CFStringGetCString(name, &freeNameCString);
+    if (NULL == useNameCString) {
+      nameCString = freeNameCString;
+    } else {
+      nameCString = useNameCString;
+    }
+    
+    if (nameCString) {
       CFIndex n = sqlite3_column_count(statement->stmt);
       for (CFIndex i = 0; i < n; i++) {
-        if (0 == strcmp((const char *)CFDataGetBytePtr(nameData), sqlite3_column_name(statement->stmt, (int)i))) {
+        if (0 == strcmp(nameCString, sqlite3_column_name(statement->stmt, (int)i))) {
           index = i;
           break;
         }
       }
-      CFRelease(nameData);
+
+      if (freeNameCString != NULL) {
+        free(freeNameCString);
+      }
     }
   }
   return index;
