@@ -304,6 +304,8 @@ inline SQLite3Status SQLite3StatementBindCFType(SQLite3StatementRef statement, C
       status = SQLite3StatementBindDate(statement, index, (CFDateRef)value);
     else if (CFNumberGetTypeID() == valueTypeID)
       status = SQLite3StatementBindNumber(statement, index, (CFNumberRef)value);
+    else if (CFNullGetTypeID() == valueTypeID)
+      status = SQLite3StatementBindNULL(statement, index);
     else
       status = kSQLite3StatusError;
   } else {
@@ -534,7 +536,7 @@ inline CFDateRef SQLite3StatementCreateDateWithColumn(SQLite3StatementRef statem
   CFDateRef date = NULL;
   CFStringRef string = NULL;
   switch (SQLite3StatementGetColumnType(statement, index)) {
-      
+
     // For integer and float, we're interpreting as unix timestamp
     case kSQLite3TypeInteger:
     case kSQLite3TypeFloat:
