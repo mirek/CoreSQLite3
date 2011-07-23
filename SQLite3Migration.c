@@ -52,31 +52,29 @@ CFMutableArrayRef SQlite3MigrationCreateURLsArrayWithDirectoryURL(CFAllocatorRef
   CFMutableArrayRef array = NULL;
   if (directoryURL) {
     CFStringRef directory = CFURLCopyFileSystemPath(directoryURL, kCFURLPOSIXPathStyle);
-    CFDataRef directoryData = CFStringCreateExternalRepresentation(allocator, directory, kCFStringEncodingUTF8, 0);
-    if (directoryData) {
-      DIR *dir = opendir((const char *)CFDataGetBytePtr(directoryData));
+    __SQLite3UTF8String utf8Directory = __SQLite3UTF8StringMake(allocator, directory);
+    DIR *dir = opendir(__SQLite3UTF8StringGetBuffer(utf8Directory));
+    if (dir != NULL) {
+      array = CFArrayCreateMutable(allocator, 0, &kCFTypeArrayCallBacks);
       struct dirent *ent = NULL;
-      if (dir != NULL) {
-        array = CFArrayCreateMutable(allocator, 0, &kCFTypeArrayCallBacks);
-        while ((ent = readdir(dir)) != NULL) {
-          CFStringRef filename = CFStringCreateWithCString(allocator, ent->d_name, kCFStringEncodingUTF8);
-          switch (SQLite3MigrationGetTypeWithPath(filename)) {
-            case kSQLite3MigrationTypeMigration:
-            case kSQLite3MigrationTypeUndoMigration:
-            {
-              CFURLRef url = CFURLCreateWithFileSystemPathRelativeToBase(allocator, filename, kCFURLPOSIXPathStyle, 0, directoryURL);
-              CFArrayAppendValue(array, url);
-              CFRelease(url);
-              break;
-            }
-              
-            default:
-              break;
+      while ((ent = readdir(dir)) != NULL) {
+        CFStringRef filename = CFStringCreateWithCString(allocator, ent->d_name, kCFStringEncodingUTF8);
+        switch (SQLite3MigrationGetTypeWithPath(filename)) {
+          case kSQLite3MigrationTypeMigration:
+          case kSQLite3MigrationTypeUndoMigration:
+          {
+            CFURLRef url = CFURLCreateWithFileSystemPathRelativeToBase(allocator, filename, kCFURLPOSIXPathStyle, 0, directoryURL);
+            CFArrayAppendValue(array, url);
+            CFRelease(url);
+            break;
           }
-          CFRelease(filename);
+            
+          default:
+            break;
         }
+        CFRelease(filename);
       }
-      CFRelease(directoryData);
+      __SQLite3UTF8StringDestroy(utf8Directory);
     }
     CFRelease(directory);
   }

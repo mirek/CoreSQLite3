@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+// Internal
+#include "CoreSQLite3UTF8String.h"
+
 #include "SQLite3Types.h"
 #include "SQLite3Connection.h"
 

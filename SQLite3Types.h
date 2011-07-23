@@ -159,3 +159,10 @@ typedef struct SQLite3Observer {
 typedef SQLite3Observer *SQLite3ObserverRef;
 
 typedef void (*SQLite3ObserverCallback)(SQLite3ObserverRef observer, SQLite3Action action, CFStringRef table, sqlite3_int64 rowId);
+
+typedef struct __SQLite3BackupOpaque {
+  CFAllocatorRef allocator;
+  CFIndex retainCount;
+} __SQLite3Backup;
+
+typedef __SQLite3Backup *SQLite3BackupRef;

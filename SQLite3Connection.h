@@ -41,6 +41,7 @@ extern bool SQLite3ConnectionRemoveUpdateCallback       (SQLite3ConnectionRef co
 //typedef SQLite3ConnectionDefaultUpdateHook SQLite3ConnectionDefaultUpdateHook;
 //kSQLite3ConnectionDefaultUpdateHook;
 
+
 #pragma mark Function and aggregate registration
 
 SQLite3Status SQLite3ConnectionRegisterFunction   (SQLite3ConnectionRef connection, CFStringRef name, CFIndex argc, void (*f)(sqlite3_context *, int, sqlite3_value **));
@@ -92,6 +93,17 @@ SQLite3Status SQLite3ConnectionDropIndex (SQLite3ConnectionRef connection, CFStr
 SQLite3Status SQLite3ConnectionDropTableIfExists (SQLite3ConnectionRef connection, CFStringRef name);
 SQLite3Status SQLite3ConnectionDropViewIfExists  (SQLite3ConnectionRef connection, CFStringRef name);
 SQLite3Status SQLite3ConnectionDropIndexIfExists (SQLite3ConnectionRef connection, CFStringRef name);
+
+#pragma mark Backup
+
+//SQLite3BackupRef SQLite3BackupCreate(CFAllocatorRef allocator, SQLite3ConnectionRef destinationConnection, CFStringRef destinationName, SQLite3ConnectionRef sourceConnection, CFStringRef sourceName);
+//SQLite3BackupRef SQLite3BackupRetain(SQLite3BackupRef backup);
+//SQLite3BackupRef SQLite3BackupRelease(SQLite3BackupRef backup);
+//
+//SQLite3Status    SQLite3BackupStep(SQLite3BackupRef backup, CFIndex page);
+//SQLite3Status    SQLite3BackupFinish(SQLite3BackupRef backup);
+//CFIndex          SQLite3BackupRemaining(SQLite3BackupRef backup);
+//CFIndex          SQLite3BackupPageCount(SQLite3BackupRef backup);
 
 #ifdef __OBJC__
 
