@@ -304,6 +304,8 @@ inline SQLite3Status SQLite3StatementBindCFType(SQLite3StatementRef statement, C
       status = SQLite3StatementBindDate(statement, index, (CFDateRef)value);
     else if (CFNumberGetTypeID() == valueTypeID)
       status = SQLite3StatementBindNumber(statement, index, (CFNumberRef)value);
+    else if (CFBooleanGetTypeID() == valueTypeID)
+      status = SQLite3StatementBindNumber(statement, index, (CFNumberRef)value);
     else if (CFNullGetTypeID() == valueTypeID)
       status = SQLite3StatementBindNULL(statement, index);
     else
