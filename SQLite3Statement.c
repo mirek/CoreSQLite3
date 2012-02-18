@@ -501,8 +501,7 @@ inline CFNumberRef SQLite3StatementCreateNumberWithColumn(SQLite3StatementRef st
     switch (SQLite3StatementGetColumnType(statement, index)) {
         
       case kSQLite3TypeNULL: {
-        int zero = 0;
-        value = CFNumberCreate(statement->allocator, kCFNumberIntType, (const void *)&zero);
+        value = (CFNumberRef)kCFNull;
         break;
       }
         
