@@ -93,7 +93,7 @@ double_t          SQLite3StatementGetDoubleWithColumn          (SQLite3Statement
 
 CFTypeRef         SQLite3StatementCreateCFTypeWithColumn       (SQLite3StatementRef statement, CFIndex index) CF_RETURNS_RETAINED;
 CFStringRef       SQLite3StatementCreateStringWithColumn       (SQLite3StatementRef statement, CFIndex index) CF_RETURNS_RETAINED;
-CFNumberRef       SQLite3StatementCreateNumberWithColumn       (SQLite3StatementRef statement, CFIndex index) CF_RETURNS_RETAINED;
+CFTypeRef         SQLite3StatementCreateNumberWithColumn       (SQLite3StatementRef statement, CFIndex index) CF_RETURNS_RETAINED;
 CFDataRef         SQLite3StatementCreateDataWithColumn         (SQLite3StatementRef statement, CFIndex index) CF_RETURNS_RETAINED;
 CFDateRef         SQLite3StatementCreateDateWithColumn         (SQLite3StatementRef statement, CFIndex index) CF_RETURNS_RETAINED;
 CFPropertyListRef SQLite3StatementCreatePropertyListWithColumn (SQLite3StatementRef statement, CFIndex index, CFOptionFlags options, CFPropertyListFormat *format) CF_RETURNS_RETAINED;

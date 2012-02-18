@@ -495,15 +495,14 @@ inline CFTypeRef SQLite3StatementCreateCFTypeWithColumn(SQLite3StatementRef stat
   return value;
 }
 
-inline CFNumberRef SQLite3StatementCreateNumberWithColumn(SQLite3StatementRef statement, CFIndex index) {
-  CFNumberRef value = NULL;
+inline CFTypeRef SQLite3StatementCreateNumberWithColumn(SQLite3StatementRef statement, CFIndex index) {
+  CFTypeRef value = kCFNull;
   if (statement) {
     switch (SQLite3StatementGetColumnType(statement, index)) {
         
-      case kSQLite3TypeNULL: {
-        value = (CFNumberRef)kCFNull;
+      case kSQLite3TypeNULL:
+      case kSQLite3TypeData:
         break;
-      }
         
       case kSQLite3TypeInteger: {
         long long value_ = (long long)SQLite3StatementGetInt64WithColumn(statement, index);
@@ -516,14 +515,19 @@ inline CFNumberRef SQLite3StatementCreateNumberWithColumn(SQLite3StatementRef st
         value = CFNumberCreate(statement->allocator, kCFNumberDoubleType, (const void *)&value_);
         break;
       }
-        
+
+      // Try parsing string to CFNumberRef with strtod - if fails return kCFNull
       case kSQLite3TypeString: {
-        // TODO: parse?
-        break;
+          const char *begin = (const char *)sqlite3_column_text(statement->stmt, (int)index);
+          if (begin) {
+            char *end = NULL;
+            double_t value_ = strtod(begin, &end);
+            if (begin != end) {
+                value = CFNumberCreate(statement->allocator, kCFNumberDoubleType, (const void *)&value_);
+            }
+          }
+          break;
       }
-        
-      case kSQLite3TypeData:
-        break;
     }
   }
   return value;
