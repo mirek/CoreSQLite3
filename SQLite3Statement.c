@@ -417,7 +417,12 @@ inline CFIndex SQLite3StatementGetColumnCount(SQLite3StatementRef statement) {
 }
 
 inline SQLite3ColumnType SQLite3StatementGetColumnType(SQLite3StatementRef statement, CFIndex index) {
-  return sqlite3_column_type(statement->stmt, (int)index);
+  SQLite3ColumnType type = sqlite3_column_type(statement->stmt, (int)index);
+  if (kSQLite3TypeString == type ||
+      kSQLite3TypeData == type) {
+    type = 0 == sqlite3_column_bytes(statement->stmt, (int)index) ? kSQLite3TypeNULL : type;
+  }
+  return type;
 }
 
 inline SQLite3ColumnType SQLite3StatementGetColumnTypeWithName(SQLite3StatementRef statement, CFStringRef name) {
