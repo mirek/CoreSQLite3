@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		EB0C650913129A6600F18BB6 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB0C650813129A6600F18BB6 /* CoreFoundation.framework */; };
-		EB0C65221312A21400F18BB6 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = EB0C651F1312A20300F18BB6 /* sqlite3.c */; };
 		EB12A6D213684FAA009B7E31 /* SQLite3ExtMath.c in Sources */ = {isa = PBXBuildFile; fileRef = EB12A6D113684FAA009B7E31 /* SQLite3ExtMath.c */; };
 		EB12A6D313684FAA009B7E31 /* SQLite3ExtMath.c in Sources */ = {isa = PBXBuildFile; fileRef = EB12A6D113684FAA009B7E31 /* SQLite3ExtMath.c */; };
 		EB12A6D413684FAA009B7E31 /* SQLite3ExtMath.c in Sources */ = {isa = PBXBuildFile; fileRef = EB12A6D113684FAA009B7E31 /* SQLite3ExtMath.c */; };
@@ -24,14 +23,12 @@
 		EB39690D1369C0940006E49B /* SQLite3ExtLogic.h in Headers */ = {isa = PBXBuildFile; fileRef = EB3969091369C0940006E49B /* SQLite3ExtLogic.h */; };
 		EB39690E1369C0940006E49B /* SQLite3ExtLogic.h in Headers */ = {isa = PBXBuildFile; fileRef = EB3969091369C0940006E49B /* SQLite3ExtLogic.h */; };
 		EB3B045C1312BE64009FDDA1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = EB3B045A1312BE64009FDDA1 /* InfoPlist.strings */; };
-		EB3B04611312BE88009FDDA1 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = EB0C651F1312A20300F18BB6 /* sqlite3.c */; };
 		EB3B04621312BE8C009FDDA1 /* SQLite3Connection.c in Sources */ = {isa = PBXBuildFile; fileRef = EBA5182113003B1000F50C8E /* SQLite3Connection.c */; };
 		EB3B04641312BE91009FDDA1 /* SQLite3Statement.c in Sources */ = {isa = PBXBuildFile; fileRef = EBA5182513003B1000F50C8E /* SQLite3Statement.c */; };
 		EB3B04651312BE94009FDDA1 /* SQLite3Migration.c in Sources */ = {isa = PBXBuildFile; fileRef = EBA8173D1301B50600F59716 /* SQLite3Migration.c */; };
 		EB3B04671312BEB5009FDDA1 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB3B04661312BEB5009FDDA1 /* CoreFoundation.framework */; };
 		EB3B04881312CD3A009FDDA1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB3B04871312CD3A009FDDA1 /* Cocoa.framework */; };
 		EB3B04891312CD43009FDDA1 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB3B04661312BEB5009FDDA1 /* CoreFoundation.framework */; };
-		EB3B048C1312CD88009FDDA1 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = EB0C651F1312A20300F18BB6 /* sqlite3.c */; };
 		EB478F2813B642CD001149CF /* SQLite3Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = EB478F2713B642CD001149CF /* SQLite3Connection.m */; };
 		EB478F2913B642CD001149CF /* SQLite3Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = EB478F2713B642CD001149CF /* SQLite3Connection.m */; };
 		EB478F2A13B642CD001149CF /* SQLite3Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = EB478F2713B642CD001149CF /* SQLite3Connection.m */; };
@@ -66,6 +63,10 @@
 		EBC09BEF1312E54C00E0361A /* TestAllocator.c in Sources */ = {isa = PBXBuildFile; fileRef = EBC09BED1312E54C00E0361A /* TestAllocator.c */; };
 		EBDBE8A2135EFF1C00CA816A /* SQLite3ExtMath.h in Headers */ = {isa = PBXBuildFile; fileRef = EBDBE89E135EFF1C00CA816A /* SQLite3ExtMath.h */; };
 		EBDBE8A3135EFF1C00CA816A /* SQLite3ExtMath.h in Headers */ = {isa = PBXBuildFile; fileRef = EBDBE89E135EFF1C00CA816A /* SQLite3ExtMath.h */; };
+		FABB4D601539376000D11634 /* shell.c in Sources */ = {isa = PBXBuildFile; fileRef = FABB4D5C1539376000D11634 /* shell.c */; };
+		FABB4D611539376000D11634 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = FABB4D5D1539376000D11634 /* sqlite3.c */; };
+		FABB4D621539376000D11634 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = FABB4D5E1539376000D11634 /* sqlite3.h */; };
+		FABB4D631539376000D11634 /* sqlite3ext.h in Headers */ = {isa = PBXBuildFile; fileRef = FABB4D5F1539376000D11634 /* sqlite3ext.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,10 +86,6 @@
 		EB0C64F413129A2300F18BB6 /* libCoreSQLite3_iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCoreSQLite3_iOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB0C64F813129A2300F18BB6 /* CoreSQLite3-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CoreSQLite3-Prefix.pch"; sourceTree = "<group>"; };
 		EB0C650813129A6600F18BB6 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.2.sdk/System/Library/Frameworks/CoreFoundation.framework; sourceTree = DEVELOPER_DIR; };
-		EB0C651E1312A20300F18BB6 /* shell.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = shell.c; sourceTree = "<group>"; };
-		EB0C651F1312A20300F18BB6 /* sqlite3.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sqlite3.c; sourceTree = "<group>"; };
-		EB0C65201312A20300F18BB6 /* sqlite3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sqlite3.h; sourceTree = "<group>"; };
-		EB0C65211312A20300F18BB6 /* sqlite3ext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sqlite3ext.h; sourceTree = "<group>"; };
 		EB12A6D113684FAA009B7E31 /* SQLite3ExtMath.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SQLite3ExtMath.c; sourceTree = "<group>"; };
 		EB12A6D513685432009B7E31 /* SQLite3ExtCrypto.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SQLite3ExtCrypto.c; sourceTree = "<group>"; };
 		EB12A6D613685432009B7E31 /* SQLite3ExtCrypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLite3ExtCrypto.h; sourceTree = "<group>"; };
@@ -127,6 +124,10 @@
 		EBC09BED1312E54C00E0361A /* TestAllocator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TestAllocator.c; sourceTree = "<group>"; };
 		EBC09BEE1312E54C00E0361A /* TestAllocator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestAllocator.h; sourceTree = "<group>"; };
 		EBDBE89E135EFF1C00CA816A /* SQLite3ExtMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQLite3ExtMath.h; sourceTree = "<group>"; };
+		FABB4D5C1539376000D11634 /* shell.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shell.c; sourceTree = "<group>"; };
+		FABB4D5D1539376000D11634 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sqlite3.c; sourceTree = "<group>"; };
+		FABB4D5E1539376000D11634 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sqlite3.h; sourceTree = "<group>"; };
+		FABB4D5F1539376000D11634 /* sqlite3ext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sqlite3ext.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -172,7 +173,7 @@
 		0867D691FE84028FC02AAC07 /* SQLite3 */ = {
 			isa = PBXGroup;
 			children = (
-				EB0C651D1312A20300F18BB6 /* sqlite-amalgamation-201101281703 */,
+				FABB4D5B1539376000D11634 /* sqlite-amalgamation-3071100 */,
 				EBA817501303FAD900F59716 /* Tests */,
 				08FB77AEFE84172EC02AAC07 /* CoreSQLite3 */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
@@ -264,17 +265,6 @@
 			name = iOS;
 			sourceTree = "<group>";
 		};
-		EB0C651D1312A20300F18BB6 /* sqlite-amalgamation-201101281703 */ = {
-			isa = PBXGroup;
-			children = (
-				EB0C651E1312A20300F18BB6 /* shell.c */,
-				EB0C651F1312A20300F18BB6 /* sqlite3.c */,
-				EB0C65201312A20300F18BB6 /* sqlite3.h */,
-				EB0C65211312A20300F18BB6 /* sqlite3ext.h */,
-			);
-			path = "sqlite-amalgamation-201101281703";
-			sourceTree = "<group>";
-		};
 		EB3B044A1312BE0C009FDDA1 /* OSX */ = {
 			isa = PBXGroup;
 			children = (
@@ -326,6 +316,17 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		FABB4D5B1539376000D11634 /* sqlite-amalgamation-3071100 */ = {
+			isa = PBXGroup;
+			children = (
+				FABB4D5C1539376000D11634 /* shell.c */,
+				FABB4D5D1539376000D11634 /* sqlite3.c */,
+				FABB4D5E1539376000D11634 /* sqlite3.h */,
+				FABB4D5F1539376000D11634 /* sqlite3ext.h */,
+			);
+			path = "sqlite-amalgamation-3071100";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -355,6 +356,8 @@
 				EB12A6DA13685432009B7E31 /* SQLite3ExtCrypto.h in Headers */,
 				EB39690D1369C0940006E49B /* SQLite3ExtLogic.h in Headers */,
 				EB9FC11B13DAF2A100E00EB8 /* CoreSQLite3UTF8String.h in Headers */,
+				FABB4D621539376000D11634 /* sqlite3.h in Headers */,
+				FABB4D631539376000D11634 /* sqlite3ext.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -488,7 +491,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EB0C65221312A21400F18BB6 /* sqlite3.c in Sources */,
 				EBB1ADC31312A69B006476A7 /* SQLite3Connection.c in Sources */,
 				EBB1ADC51312A6A0006476A7 /* SQLite3Statement.c in Sources */,
 				EBB1ADC61312A6A3006476A7 /* SQLite3Migration.c in Sources */,
@@ -506,7 +508,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EB3B04611312BE88009FDDA1 /* sqlite3.c in Sources */,
 				EB3B04621312BE8C009FDDA1 /* SQLite3Connection.c in Sources */,
 				EB3B04641312BE91009FDDA1 /* SQLite3Statement.c in Sources */,
 				EB3B04651312BE94009FDDA1 /* SQLite3Migration.c in Sources */,
@@ -517,6 +518,8 @@
 				EB478F2813B642CD001149CF /* SQLite3Connection.m in Sources */,
 				EB478F2E13B6514C001149CF /* SQLite3Statement.m in Sources */,
 				EB9FC11713DAF28900E00EB8 /* CoreSQLite3UTF8String.c in Sources */,
+				FABB4D601539376000D11634 /* shell.c in Sources */,
+				FABB4D611539376000D11634 /* sqlite3.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -528,7 +531,6 @@
 				EBA8176A1303FD8700F59716 /* SQLite3Statement.c in Sources */,
 				EBA8176C1303FD8700F59716 /* SQLite3Migration.c in Sources */,
 				EBA8175A1303FAD900F59716 /* Tests.m in Sources */,
-				EB3B048C1312CD88009FDDA1 /* sqlite3.c in Sources */,
 				EBC09BEF1312E54C00E0361A /* TestAllocator.c in Sources */,
 				EBB02F14131BCBE50035BCF4 /* SQLite3Observer.c in Sources */,
 				EB12A6D313684FAA009B7E31 /* SQLite3ExtMath.c in Sources */,
