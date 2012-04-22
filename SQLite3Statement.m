@@ -284,6 +284,48 @@
   return [[self createDataWithColumn: index] autorelease];
 }
 
+#pragma mark Index based, autoreleased, not null
+
+- (id) objectWithColumnNotNull: (NSInteger) index {
+  id object = [[self createObjectWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSString *) stringWithColumnNotNull: (NSInteger) index {
+  id object = [[self createStringWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSNumber *) numberWithColumnNotNull: (NSInteger) index {
+  id object = [[self createNumberWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSDate *) dateWithColumnNotNull: (NSInteger) index {
+  id object = [[self createDateWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSData *) dataWithColumnNotNull: (NSInteger) index {
+  id object = [[self createDataWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
 #pragma mark Name based, reference counted
 
 - (id) createObjectWithColumnName: (NSString *) name {
@@ -326,6 +368,48 @@
 
 - (NSData *) dataWithColumnName: (NSString *) name {
   return [[self createDataWithColumnName: name] autorelease];
+}
+
+#pragma mark Name based, autoreleased, not null
+
+- (id) objectWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createObjectWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSString *) stringWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createStringWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSNumber *) numberWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createNumberWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSDate *) dateWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createDateWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSData *) dataWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createDataWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
 }
 
 #pragma mark Fast enumeration

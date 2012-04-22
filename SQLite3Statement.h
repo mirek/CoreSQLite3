@@ -219,6 +219,14 @@ CFDictionaryRef   SQLite3StatementCreateDictionaryForAllColumns (SQLite3Statemen
 - (NSDate *)   dateWithColumn:   (NSInteger) index;
 - (NSData *)   dataWithColumn:   (NSInteger) index;
 
+#pragma mark Index based, autoreleased, not null
+
+- (id)         objectWithColumnNotNull: (NSInteger) index;
+- (NSString *) stringWithColumnNotNull: (NSInteger) index;
+- (NSNumber *) numberWithColumnNotNull: (NSInteger) index;
+- (NSDate *)   dateWithColumnNotNull:   (NSInteger) index;
+- (NSData *)   dataWithColumnNotNull:   (NSInteger) index;
+
 #pragma mark Name based, reference counted
 
 - (id)         createObjectWithColumnName: (NSString *) name NS_RETURNS_RETAINED;
@@ -234,6 +242,14 @@ CFDictionaryRef   SQLite3StatementCreateDictionaryForAllColumns (SQLite3Statemen
 - (NSNumber *) numberWithColumnName: (NSString *) name;
 - (NSDate *)   dateWithColumnName:   (NSString *) name;
 - (NSData *)   dataWithColumnName:   (NSString *) name;
+
+#pragma mark Name based, autoreleased, not null
+
+- (id)         objectWithColumnNameNotNull: (NSString *) name;
+- (NSString *) stringWithColumnNameNotNull: (NSString *) name;
+- (NSNumber *) numberWithColumnNameNotNull: (NSString *) name;
+- (NSDate *)   dateWithColumnNameNotNull:   (NSString *) name;
+- (NSData *)   dataWithColumnNameNotNull:   (NSString *) name;
 
 @end
 
