@@ -729,16 +729,18 @@ inline SQLite3Status SQLite3InsertWithTableNameAndDictionary(SQLite3ConnectionRe
   CFStringRef keysString = CFStringCreateByCombiningStrings(connection->allocator, keysArray, CFSTR(", "));
   const char *valuesCString = _SQLite3CreateValuesPlaceholderCString(connection->allocator, n);
   CFStringRef sql = CFStringCreateWithFormat(connection->allocator, NULL, CFSTR("INSERT INTO %@(%@) VALUES(%s)"), table, keysString, valuesCString);
-  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
-  if (statement) {
-    SQLite3StatementBindArray(statement, valuesArray);
-    status = SQLite3StatementStep(statement);
-    SQLite3StatementReset(statement);
-    SQLite3StatementClearBindings(statement);
-    SQLite3StatementFinalize(statement);
-    SQLite3StatementRelease(statement);
+  if (sql) {
+    SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+    if (statement) {
+      SQLite3StatementBindArray(statement, valuesArray);
+      status = SQLite3StatementStep(statement);
+      SQLite3StatementReset(statement);
+      SQLite3StatementClearBindings(statement);
+      SQLite3StatementFinalize(statement);
+      SQLite3StatementRelease(statement);
+    }
+    CFRelease(sql);
   }
-  CFRelease(sql);
   CFAllocatorDeallocate(connection->allocator, (void *)valuesCString);
   CFRelease(keysString);
   CFRelease(valuesArray);

@@ -160,8 +160,10 @@ inline SQLite3Status SQLite3ConnectionExecuteWithContentsOfURL(SQLite3Connection
   CFDataRef data = NULL;
   if (CFURLCreateDataAndPropertiesFromResource(connection->allocator, url, &data, &properties, NULL, &errorCode)) {
     CFStringRef sql = CFStringCreateWithBytes(connection->allocator, CFDataGetBytePtr(data), CFDataGetLength(data), kCFStringEncodingUTF8, 0);
-    status = SQLite3ConnectionExecute(connection, sql);
-    CFRelease(sql);
+    if (sql) {
+      status = SQLite3ConnectionExecute(connection, sql);
+      CFRelease(sql);
+    }
   } else {
     // TODO: Error
   }
