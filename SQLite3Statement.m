@@ -17,24 +17,30 @@
 
 - (id) initWithConnection: (SQLite3Connection *) anConnection query: (NSString *) sql {
   if ((self = [super init])) {
-    connection = [anConnection retain];
-    statement = SQLite3StatementCreate(connection.connection, (CFStringRef)sql);
+    @synchronized(anConnection) {
+      connection = [anConnection retain];
+      statement = SQLite3StatementCreate(connection.connection, (CFStringRef)sql);
+    }
   }
   return self;
 }
 
 - (id) initWithConnection: (SQLite3Connection *) anConnection query: (NSString *) sql arrayBindings: (NSArray *) arrayBindings {
   if ((self = [super init])) {
-    connection = [anConnection retain];
-    statement = SQLite3StatementCreateWithArrayBindings(connection.connection, (CFStringRef)sql, (CFArrayRef)arrayBindings);
+    @synchronized(anConnection) {
+      connection = [anConnection retain];
+      statement = SQLite3StatementCreateWithArrayBindings(connection.connection, (CFStringRef)sql, (CFArrayRef)arrayBindings);
+    }
   }
   return self;
 }
 
 - (id) initWithConnection: (SQLite3Connection *) anConnection query: (NSString *) sql dictionaryBindings: (NSDictionary *) dictionaryBindings {
   if ((self = [super init])) {
-    connection = [anConnection retain];
-    statement = SQLite3StatementCreateWithDictionaryBindings(connection.connection, (CFStringRef)sql, (CFDictionaryRef)dictionaryBindings);
+    @synchronized(anConnection) {
+      connection = [anConnection retain];
+      statement = SQLite3StatementCreateWithDictionaryBindings(connection.connection, (CFStringRef)sql, (CFDictionaryRef)dictionaryBindings);
+    }
   }
   return self;
 }
@@ -53,7 +59,9 @@
 
 - (void) dealloc {
   SQLite3StatementRelease(statement);
-  [connection release];
+  @synchronized(connection) {
+    [connection release];
+  }
   [super dealloc];
 }
 
