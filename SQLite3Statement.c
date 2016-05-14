@@ -417,7 +417,12 @@ inline CFIndex SQLite3StatementGetColumnCount(SQLite3StatementRef statement) {
 }
 
 inline SQLite3ColumnType SQLite3StatementGetColumnType(SQLite3StatementRef statement, CFIndex index) {
-  return sqlite3_column_type(statement->stmt, (int)index);
+  SQLite3ColumnType type = sqlite3_column_type(statement->stmt, (int)index);
+  if (kSQLite3TypeString == type ||
+      kSQLite3TypeData == type) {
+    type = 0 == sqlite3_column_bytes(statement->stmt, (int)index) ? kSQLite3TypeNULL : type;
+  }
+  return type;
 }
 
 inline SQLite3ColumnType SQLite3StatementGetColumnTypeWithName(SQLite3StatementRef statement, CFStringRef name) {
@@ -724,16 +729,18 @@ inline SQLite3Status SQLite3InsertWithTableNameAndDictionary(SQLite3ConnectionRe
   CFStringRef keysString = CFStringCreateByCombiningStrings(connection->allocator, keysArray, CFSTR(", "));
   const char *valuesCString = _SQLite3CreateValuesPlaceholderCString(connection->allocator, n);
   CFStringRef sql = CFStringCreateWithFormat(connection->allocator, NULL, CFSTR("INSERT INTO %@(%@) VALUES(%s)"), table, keysString, valuesCString);
-  SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
-  if (statement) {
-    SQLite3StatementBindArray(statement, valuesArray);
-    status = SQLite3StatementStep(statement);
-    SQLite3StatementReset(statement);
-    SQLite3StatementClearBindings(statement);
-    SQLite3StatementFinalize(statement);
-    SQLite3StatementRelease(statement);
+  if (sql) {
+    SQLite3StatementRef statement = SQLite3StatementCreate(connection, sql);
+    if (statement) {
+      SQLite3StatementBindArray(statement, valuesArray);
+      status = SQLite3StatementStep(statement);
+      SQLite3StatementReset(statement);
+      SQLite3StatementClearBindings(statement);
+      SQLite3StatementFinalize(statement);
+      SQLite3StatementRelease(statement);
+    }
+    CFRelease(sql);
   }
-  CFRelease(sql);
   CFAllocatorDeallocate(connection->allocator, (void *)valuesCString);
   CFRelease(keysString);
   CFRelease(valuesArray);

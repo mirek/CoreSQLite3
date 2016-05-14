@@ -17,24 +17,30 @@
 
 - (id) initWithConnection: (SQLite3Connection *) anConnection query: (NSString *) sql {
   if ((self = [super init])) {
-    connection = [anConnection retain];
-    statement = SQLite3StatementCreate(connection.connection, (CFStringRef)sql);
+    @synchronized(anConnection) {
+      connection = [anConnection retain];
+      statement = SQLite3StatementCreate(connection.connection, (CFStringRef)sql);
+    }
   }
   return self;
 }
 
 - (id) initWithConnection: (SQLite3Connection *) anConnection query: (NSString *) sql arrayBindings: (NSArray *) arrayBindings {
   if ((self = [super init])) {
-    connection = [anConnection retain];
-    statement = SQLite3StatementCreateWithArrayBindings(connection.connection, (CFStringRef)sql, (CFArrayRef)arrayBindings);
+    @synchronized(anConnection) {
+      connection = [anConnection retain];
+      statement = SQLite3StatementCreateWithArrayBindings(connection.connection, (CFStringRef)sql, (CFArrayRef)arrayBindings);
+    }
   }
   return self;
 }
 
 - (id) initWithConnection: (SQLite3Connection *) anConnection query: (NSString *) sql dictionaryBindings: (NSDictionary *) dictionaryBindings {
   if ((self = [super init])) {
-    connection = [anConnection retain];
-    statement = SQLite3StatementCreateWithDictionaryBindings(connection.connection, (CFStringRef)sql, (CFDictionaryRef)dictionaryBindings);
+    @synchronized(anConnection) {
+      connection = [anConnection retain];
+      statement = SQLite3StatementCreateWithDictionaryBindings(connection.connection, (CFStringRef)sql, (CFDictionaryRef)dictionaryBindings);
+    }
   }
   return self;
 }
@@ -53,7 +59,9 @@
 
 - (void) dealloc {
   SQLite3StatementRelease(statement);
-  [connection release];
+  @synchronized(connection) {
+    [connection release];
+  }
   [super dealloc];
 }
 
@@ -284,6 +292,48 @@
   return [[self createDataWithColumn: index] autorelease];
 }
 
+#pragma mark Index based, autoreleased, not null
+
+- (id) objectWithColumnNotNull: (NSInteger) index {
+  id object = [[self createObjectWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSString *) stringWithColumnNotNull: (NSInteger) index {
+  id object = [[self createStringWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSNumber *) numberWithColumnNotNull: (NSInteger) index {
+  id object = [[self createNumberWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSDate *) dateWithColumnNotNull: (NSInteger) index {
+  id object = [[self createDateWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSData *) dataWithColumnNotNull: (NSInteger) index {
+  id object = [[self createDataWithColumn: index] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
 #pragma mark Name based, reference counted
 
 - (id) createObjectWithColumnName: (NSString *) name {
@@ -326,6 +376,48 @@
 
 - (NSData *) dataWithColumnName: (NSString *) name {
   return [[self createDataWithColumnName: name] autorelease];
+}
+
+#pragma mark Name based, autoreleased, not null
+
+- (id) objectWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createObjectWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSString *) stringWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createStringWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSNumber *) numberWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createNumberWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSDate *) dateWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createDateWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
+}
+
+- (NSData *) dataWithColumnNameNotNull: (NSString *) name {
+  id object = [[self createDataWithColumnName: name] autorelease];
+  if (object == [NSNull null]) {
+    return nil;
+  }
+  return object;
 }
 
 #pragma mark Fast enumeration
